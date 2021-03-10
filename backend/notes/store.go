@@ -5,6 +5,8 @@ import (
 	"github.com/google/uuid"
 )
 
+//go:generate mockery --name Store
+
 type Store interface {
 	Insert(ctx context.Context, n *Note) error
 	Update(ctx context.Context, n *Note) error
