@@ -73,11 +73,40 @@ func (s *Store) Delete(ctx context.Context, id uuid.UUID) error {
 }
 
 func (s *Store) Get(ctx context.Context, id uuid.UUID) (*notes.Note, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	note, found := s.data[id]
-	if !found {
-		return nil, notes.ErrNotFound
+
+	var (
+		noteChan = make(chan *notes.Note, 1)
+		errChan  = make(chan error, 1)
+	)
+
+	go func() {
+		defer func() {
+			close(noteChan)
+			close(errChan)
+		}()
+
+		select {
+		case <-ctx.Done():
+			errChan <- ctx.Err()
+			return
+		default:
+		}
+
+		s.mu.RLock()
+		defer s.mu.RUnlock()
+		note, found := s.data[id]
+		if !found {
+			errChan <- notes.ErrNotFound
+			return
+		}
+
+		noteChan <- note
+	}()
+
+	select {
+	case err := <-errChan:
+		return nil, err
+	case note := <-noteChan:
+		return note, nil
 	}
-	return note, nil
 }
