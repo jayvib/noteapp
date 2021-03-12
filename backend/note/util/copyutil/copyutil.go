@@ -1,11 +1,13 @@
 package copyutil
 
-import "noteapp/notes"
+import (
+	"noteapp/note"
+)
 
 // Shallow takes a note and then returns a copied note with
 // a new address.
-func Shallow(note *notes.Note) *notes.Note {
-	cpyNote := new(notes.Note)
-	*cpyNote = *note
+func Shallow(n *note.Note) *note.Note {
+	cpyNote := new(note.Note)
+	*cpyNote = *n
 	return cpyNote
 }

@@ -2,7 +2,7 @@ package memory
 
 import (
 	"github.com/stretchr/testify/suite"
-	"noteapp/notes/store/storetest"
+	"noteapp/note/store/storetest"
 	"testing"
 )
 

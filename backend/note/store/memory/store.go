@@ -3,25 +3,25 @@ package memory
 import (
 	"context"
 	"github.com/google/uuid"
-	"noteapp/notes"
-	"noteapp/notes/util/copyutil"
+	"noteapp/note"
+	"noteapp/note/util/copyutil"
 	"sync"
 )
 
-var _ notes.Store = (*Store)(nil)
+var _ note.Store = (*Store)(nil)
 
 func New() *Store {
 	return &Store{
-		data: make(map[uuid.UUID]*notes.Note),
+		data: make(map[uuid.UUID]*note.Note),
 	}
 }
 
 type Store struct {
 	mu   sync.RWMutex
-	data map[uuid.UUID]*notes.Note
+	data map[uuid.UUID]*note.Note
 }
 
-func (s *Store) Insert(ctx context.Context, n *notes.Note) error {
+func (s *Store) Insert(ctx context.Context, n *note.Note) error {
 
 	var (
 		errChan  = make(chan error, 1)
@@ -45,7 +45,7 @@ func (s *Store) Insert(ctx context.Context, n *notes.Note) error {
 		_, exists := s.data[n.ID]
 		s.mu.RUnlock()
 		if exists {
-			errChan <- notes.ErrExists
+			errChan <- note.ErrExists
 			return
 		}
 
@@ -64,7 +64,7 @@ func (s *Store) Insert(ctx context.Context, n *notes.Note) error {
 	}
 }
 
-func (s *Store) Update(ctx context.Context, n *notes.Note) error {
+func (s *Store) Update(ctx context.Context, n *note.Note) error {
 	panic("implement me")
 }
 
@@ -72,10 +72,10 @@ func (s *Store) Delete(ctx context.Context, id uuid.UUID) error {
 	panic("implement me")
 }
 
-func (s *Store) Get(ctx context.Context, id uuid.UUID) (*notes.Note, error) {
+func (s *Store) Get(ctx context.Context, id uuid.UUID) (*note.Note, error) {
 
 	var (
-		noteChan = make(chan *notes.Note, 1)
+		noteChan = make(chan *note.Note, 1)
 		errChan  = make(chan error, 1)
 	)
 
@@ -94,13 +94,13 @@ func (s *Store) Get(ctx context.Context, id uuid.UUID) (*notes.Note, error) {
 
 		s.mu.RLock()
 		defer s.mu.RUnlock()
-		note, found := s.data[id]
+		n, found := s.data[id]
 		if !found {
-			errChan <- notes.ErrNotFound
+			errChan <- note.ErrNotFound
 			return
 		}
 
-		noteChan <- note
+		noteChan <- n
 	}()
 
 	select {
