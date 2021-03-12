@@ -10,6 +10,17 @@ func TimePointer(t time.Time) *time.Time {
 	return &t
 }
 
+func BoolPointer(b bool) *bool {
+	return &b
+}
+
+func BoolValue(b *bool) bool {
+	if b == nil {
+		return false
+	}
+	return *b
+}
+
 func StringValue(s *string) string {
 	if s == nil {
 		return ""
