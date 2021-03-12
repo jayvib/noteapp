@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"noteapp/notes"
+	"noteapp/notes/util/copyutil"
 	"sync"
 )
 
@@ -50,15 +51,12 @@ func (s *Store) Insert(ctx context.Context, n *notes.Note) error {
 
 		s.mu.Lock()
 		defer s.mu.Unlock()
-		cpyNote := new(notes.Note)
-		*cpyNote = *n
+		cpyNote := copyutil.Shallow(n)
 		s.data[n.ID] = cpyNote
 		doneChan <- struct{}{}
 	}()
 
 	select {
-	case <-ctx.Done():
-		return ctx.Err()
 	case err := <-errChan:
 		return err
 	case <-doneChan:

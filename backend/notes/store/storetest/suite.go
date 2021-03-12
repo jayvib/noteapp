@@ -5,6 +5,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
 	"noteapp/notes"
+	"noteapp/notes/util/copyutil"
 	"noteapp/pkg/ptrconv"
 	"time"
 )
@@ -42,16 +43,15 @@ func (s *TestSuite) TestInsert() {
 	})
 
 	s.Run("Inserting an existing product should return a notes.ErrExists error", func() {
-		err := s.store.Insert(context.TODO(), note)
+		err := s.store.Insert(dummyCtx, note)
 		if assert.Error(err) {
 			assert.Equal(notes.ErrExists, err)
 		}
 	})
 
 	s.Run("Calling context cancel while inserting new product should return an context.Cancelled error", func() {
-		ctx, cancel := context.WithCancel(context.TODO())
-		cpyNote := new(notes.Note)
-		*cpyNote = *note
+		ctx, cancel := context.WithCancel(dummyCtx)
+		cpyNote := copyutil.Shallow(note)
 		cpyNote.ID = uuid.New()
 		cancel()
 		err := s.store.Insert(ctx, cpyNote)
