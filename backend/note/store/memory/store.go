@@ -106,7 +106,38 @@ func (s *Store) Update(ctx context.Context, n *note.Note) (*note.Note, error) {
 }
 
 func (s *Store) Delete(ctx context.Context, id uuid.UUID) error {
-	panic("implement me")
+
+	var (
+		errChan  = make(chan error, 1)
+		doneChan = make(chan struct{}, 1)
+	)
+
+	go func() {
+		defer func() {
+			close(errChan)
+			close(doneChan)
+		}()
+
+		select {
+		case <-ctx.Done():
+			errChan <- ctx.Err()
+			return
+		default:
+		}
+
+		s.mu.Lock()
+		defer s.mu.Unlock()
+		delete(s.data, id)
+
+		doneChan <- struct{}{}
+	}()
+
+	select {
+	case err := <-errChan:
+		return err
+	case <-doneChan:
+		return nil
+	}
 }
 
 func (s *Store) Get(ctx context.Context, id uuid.UUID) (*note.Note, error) {

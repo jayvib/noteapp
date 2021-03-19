@@ -88,15 +88,15 @@ func (s *TestSuite) TestGet() {
 	})
 }
 
-func (s *TestSuite) TestUpdate() {
+func (s *TestSuite) setupFunc() *note.Note {
+	n := copyutil.Shallow(dummyNote)
+	n.ID = uuid.New()
+	err := s.store.Insert(dummyCtx, n)
+	s.NoError(err)
+	return n
+}
 
-	setupFunc := func() *note.Note {
-		n := copyutil.Shallow(dummyNote)
-		n.ID = uuid.New()
-		err := s.store.Insert(dummyCtx, n)
-		s.NoError(err)
-		return n
-	}
+func (s *TestSuite) TestUpdate() {
 
 	assertNote := func(want *note.Note) {
 		got, err := s.store.Get(dummyCtx, want.ID)
@@ -105,7 +105,7 @@ func (s *TestSuite) TestUpdate() {
 	}
 
 	s.Run("Updating an existing product", func() {
-		want := setupFunc()
+		want := s.setupFunc()
 
 		updated := &note.Note{
 			ID:      want.ID,
@@ -136,7 +136,34 @@ func (s *TestSuite) TestUpdate() {
 		ctx, cancel := context.WithCancel(dummyCtx)
 		cancel()
 
-		_, err := s.store.Update(ctx, setupFunc())
+		_, err := s.store.Update(ctx, s.setupFunc())
+		s.Error(err)
+		s.Equal(note.ErrCancelled, err)
+	})
+}
+
+func (s *TestSuite) TestDelete() {
+
+	assert := func(id uuid.UUID) {
+		got, err := s.store.Get(dummyCtx, id)
+		s.Equal(err, note.ErrNotFound)
+		s.Nil(got)
+	}
+
+	s.Run("Deleting a note", func() {
+		want := s.setupFunc()
+
+		err := s.store.Delete(dummyCtx, want.ID)
+		s.NoError(err)
+
+		assert(want.ID)
+	})
+
+	s.Run("Calling context cancel should return an notes.ErrCancelled", func() {
+		ctx, cancel := context.WithCancel(dummyCtx)
+		cancel()
+
+		err := s.store.Delete(ctx, uuid.New())
 		s.Error(err)
 		s.Equal(note.ErrCancelled, err)
 	})
