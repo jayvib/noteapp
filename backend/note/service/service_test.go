@@ -13,8 +13,6 @@ import (
 	"time"
 )
 
-// TODO: Check also the created time
-
 var dummyCtx = context.TODO()
 
 var dummyNote = &note.Note{
@@ -34,24 +32,59 @@ type TestSuite struct {
 }
 
 func (s *TestSuite) TestCreate() {
+	var (
+		t = s.T()
+	)
+
+	getNote := func() *note.Note {
+		cpyNote := copyutil.Shallow(dummyNote)
+		cpyNote.ID = uuid.Nil
+		cpyNote.CreatedTime = nil
+		return cpyNote
+	}
 
 	s.Run("Inserting new note", func() {
-		cpyNote := copyutil.Shallow(dummyNote)
+		cpyNote := getNote()
+
 		store := new(mocks.Store)
-		store.On("Insert", mock.Anything, mock.MatchedBy(matchByID(cpyNote))).Return(nil, cpyNote)
+		store.On("Insert", mock.Anything, mock.AnythingOfType("*note.Note")).Return(nil, cpyNote)
 
 		svc := New(store)
 
 		got, err := svc.Create(dummyCtx, cpyNote)
 		s.NoError(err)
 		s.NotNil(got)
+		s.NotNil(got.CreatedTime)
+
+		s.True(cpyNote != got, "Expecting a new pointer address for the received note from create")
+
+		store.AssertExpectations(t)
+	})
+
+	s.Run("Inserting an existing note should return an error", func() {
+		store := new(mocks.Store)
+		store.On("Get", mock.Anything, mock.MatchedBy(matchByID(dummyNote.ID))).Return(dummyNote, nil)
+
+		svc := New(store)
+
+		got, err := svc.Create(dummyCtx, dummyNote)
+		s.Error(err)
+		s.Nil(got)
+
+		store.AssertExpectations(t)
 	})
 
 }
 
-func matchByID(cpyNote *note.Note) func(x interface{}) bool {
+func matchByID(id uuid.UUID) func(x interface{}) bool {
 	return func(x interface{}) bool {
-		n := x.(*note.Note)
-		return n.ID == cpyNote.ID
+		switch v := x.(type) {
+		case uuid.UUID:
+			return v == id
+		case *note.Note:
+			return v.ID == id
+		default:
+			return false
+		}
 	}
 }
