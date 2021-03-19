@@ -2,7 +2,7 @@
 fmt:
 	go fmt ./...
 
-unit-tests:
+unit-tests: lint
 	@echo "Running unit tests"
 	go test -short ./... -tags=unit-tests -race | grep -v '^?'
 
