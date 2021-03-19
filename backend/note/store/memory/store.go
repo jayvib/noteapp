@@ -42,16 +42,15 @@ func (s *Store) Insert(ctx context.Context, n *note.Note) error {
 		default:
 		}
 
-		s.mu.RLock()
+		s.mu.Lock()
+		defer s.mu.Unlock()
 		_, exists := s.data[n.ID]
-		s.mu.RUnlock()
+
 		if exists {
 			errChan <- note.ErrExists
 			return
 		}
 
-		s.mu.Lock()
-		defer s.mu.Unlock()
 		cpyNote := copyutil.Shallow(n)
 		s.data[n.ID] = cpyNote
 		doneChan <- struct{}{}
@@ -66,13 +65,44 @@ func (s *Store) Insert(ctx context.Context, n *note.Note) error {
 }
 
 func (s *Store) Update(ctx context.Context, n *note.Note) (*note.Note, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	exist := s.data[n.ID]
 
-	_ = copier.CopyWithOption(exist, n, copier.Option{IgnoreEmpty: true, DeepCopy: true})
+	var (
+		errChan  = make(chan error, 1)
+		noteChan = make(chan *note.Note, 1)
+	)
 
-	return copyutil.Shallow(exist), nil
+	go func() {
+		defer func() {
+			close(errChan)
+			close(noteChan)
+		}()
+
+		select {
+		case <-ctx.Done():
+			errChan <- ctx.Err()
+			return
+		default:
+		}
+
+		s.mu.Lock()
+		defer s.mu.Unlock()
+		exist, found := s.data[n.ID]
+		if !found {
+			errChan <- note.ErrNotFound
+			return
+		}
+
+		_ = copier.CopyWithOption(exist, n, copier.Option{IgnoreEmpty: true, DeepCopy: true})
+
+		noteChan <- copyutil.Shallow(exist)
+	}()
+
+	select {
+	case err := <-errChan:
+		return nil, err
+	case existingNote := <-noteChan:
+		return existingNote, nil
+	}
 }
 
 func (s *Store) Delete(ctx context.Context, id uuid.UUID) error {

@@ -120,4 +120,24 @@ func (s *TestSuite) TestUpdate() {
 		assertNote(want)
 		s.Equal(want, updated)
 	})
+
+	s.Run("Updating an non-existing product should return an error", func() {
+		noneExistingProd := &note.Note{
+			ID:      uuid.New(),
+			Content: ptrconv.StringPointer("Not existing yet"),
+		}
+
+		updated, err := s.store.Update(dummyCtx, noneExistingProd)
+		s.Equal(err, note.ErrNotFound)
+		s.Nil(updated)
+	})
+
+	s.Run("Calling context cancel should return an notes.ErrCancelled", func() {
+		ctx, cancel := context.WithCancel(dummyCtx)
+		cancel()
+
+		_, err := s.store.Update(ctx, setupFunc())
+		s.Error(err)
+		s.Equal(note.ErrCancelled, err)
+	})
 }
