@@ -4,7 +4,7 @@ package mocks
 
 import (
 	context "context"
-	notes "noteapp/notes"
+	note "noteapp/note"
 
 	mock "github.com/stretchr/testify/mock"
 
@@ -31,15 +31,15 @@ func (_m *Store) Delete(ctx context.Context, id uuid.UUID) error {
 }
 
 // Get provides a mock function with given fields: ctx, id
-func (_m *Store) Get(ctx context.Context, id uuid.UUID) (*notes.Note, error) {
+func (_m *Store) Get(ctx context.Context, id uuid.UUID) (*note.Note, error) {
 	ret := _m.Called(ctx, id)
 
-	var r0 *notes.Note
-	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) *notes.Note); ok {
+	var r0 *note.Note
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) *note.Note); ok {
 		r0 = rf(ctx, id)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*notes.Note)
+			r0 = ret.Get(0).(*note.Note)
 		}
 	}
 
@@ -54,11 +54,11 @@ func (_m *Store) Get(ctx context.Context, id uuid.UUID) (*notes.Note, error) {
 }
 
 // Insert provides a mock function with given fields: ctx, n
-func (_m *Store) Insert(ctx context.Context, n *notes.Note) error {
+func (_m *Store) Insert(ctx context.Context, n *note.Note) error {
 	ret := _m.Called(ctx, n)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, *notes.Note) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, *note.Note) error); ok {
 		r0 = rf(ctx, n)
 	} else {
 		r0 = ret.Error(0)
@@ -68,15 +68,24 @@ func (_m *Store) Insert(ctx context.Context, n *notes.Note) error {
 }
 
 // Update provides a mock function with given fields: ctx, n
-func (_m *Store) Update(ctx context.Context, n *notes.Note) error {
+func (_m *Store) Update(ctx context.Context, n *note.Note) (*note.Note, error) {
 	ret := _m.Called(ctx, n)
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, *notes.Note) error); ok {
+	var r0 *note.Note
+	if rf, ok := ret.Get(0).(func(context.Context, *note.Note) *note.Note); ok {
 		r0 = rf(ctx, n)
 	} else {
-		r0 = ret.Error(0)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*note.Note)
+		}
 	}
 
-	return r0
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *note.Note) error); ok {
+		r1 = rf(ctx, n)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }

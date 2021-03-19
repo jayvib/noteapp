@@ -65,14 +65,14 @@ func (s *Store) Insert(ctx context.Context, n *note.Note) error {
 	}
 }
 
-func (s *Store) Update(ctx context.Context, n *note.Note) error {
+func (s *Store) Update(ctx context.Context, n *note.Note) (*note.Note, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	exist := s.data[n.ID]
 
 	_ = copier.CopyWithOption(exist, n, copier.Option{IgnoreEmpty: true, DeepCopy: true})
 
-	return nil
+	return copyutil.Shallow(exist), nil
 }
 
 func (s *Store) Delete(ctx context.Context, id uuid.UUID) error {

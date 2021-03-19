@@ -112,11 +112,12 @@ func (s *TestSuite) TestUpdate() {
 			Content: ptrconv.StringPointer("Updated Content"),
 		}
 
-		err := s.store.Update(dummyCtx, updated)
+		updated, err := s.store.Update(dummyCtx, updated)
 		s.Assert().NoError(err)
 
 		want.Content = updated.Content
 
 		assertNote(want)
+		s.Equal(want, updated)
 	})
 }
