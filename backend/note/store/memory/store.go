@@ -3,6 +3,7 @@ package memory
 import (
 	"context"
 	"github.com/google/uuid"
+	"github.com/jinzhu/copier"
 	"noteapp/note"
 	"noteapp/note/util/copyutil"
 	"sync"
@@ -65,7 +66,13 @@ func (s *Store) Insert(ctx context.Context, n *note.Note) error {
 }
 
 func (s *Store) Update(ctx context.Context, n *note.Note) error {
-	panic("implement me")
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	exist := s.data[n.ID]
+
+	_ = copier.CopyWithOption(exist, n, copier.Option{IgnoreEmpty: true, DeepCopy: true})
+
+	return nil
 }
 
 func (s *Store) Delete(ctx context.Context, id uuid.UUID) error {
@@ -106,7 +113,7 @@ func (s *Store) Get(ctx context.Context, id uuid.UUID) (*note.Note, error) {
 	select {
 	case err := <-errChan:
 		return nil, err
-	case note := <-noteChan:
-		return note, nil
+	case _note := <-noteChan:
+		return _note, nil
 	}
 }

@@ -87,3 +87,36 @@ func (s *TestSuite) TestGet() {
 		s.Equal(note.ErrCancelled, err)
 	})
 }
+
+func (s *TestSuite) TestUpdate() {
+
+	setupFunc := func() *note.Note {
+		n := copyutil.Shallow(dummyNote)
+		n.ID = uuid.New()
+		err := s.store.Insert(dummyCtx, n)
+		s.NoError(err)
+		return n
+	}
+
+	assertNote := func(want *note.Note) {
+		got, err := s.store.Get(dummyCtx, want.ID)
+		s.Assert().NoError(err)
+		s.Assert().Equal(want, got)
+	}
+
+	s.Run("Updating an existing product", func() {
+		want := setupFunc()
+
+		updated := &note.Note{
+			ID:      want.ID,
+			Content: ptrconv.StringPointer("Updated Content"),
+		}
+
+		err := s.store.Update(dummyCtx, updated)
+		s.Assert().NoError(err)
+
+		want.Content = updated.Content
+
+		assertNote(want)
+	})
+}
