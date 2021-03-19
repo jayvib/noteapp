@@ -11,17 +11,24 @@ import (
 
 var _ note.Store = (*Store)(nil)
 
+// Store is the in-memory implementation for note.Store.
+// This is safe for concurrent use.
+type Store struct {
+	mu   sync.RWMutex
+	data map[uuid.UUID]*note.Note
+}
+
+// New return a new instance of store.
 func New() *Store {
 	return &Store{
 		data: make(map[uuid.UUID]*note.Note),
 	}
 }
 
-type Store struct {
-	mu   sync.RWMutex
-	data map[uuid.UUID]*note.Note
-}
-
+// Insert inserts an n note to the store. It takes ctx context
+// in order to let the caller stop the execution in any form.
+// It will return an error if encountered and there is,
+// it will be the ErrExists or ErrCancelled errors.
 func (s *Store) Insert(ctx context.Context, n *note.Note) error {
 
 	var (
@@ -64,6 +71,11 @@ func (s *Store) Insert(ctx context.Context, n *note.Note) error {
 	}
 }
 
+// Update updates an existing n note to the store. It takes ctx
+// context in order to let the caller stop the execution in any form.
+// It will return an updated note with different memory address from
+// n note in order to avoid side-effect. An error can also return
+// if encountered and it will be ErrNotFound or ErrCancelled.
 func (s *Store) Update(ctx context.Context, n *note.Note) (*note.Note, error) {
 
 	var (
@@ -105,6 +117,9 @@ func (s *Store) Update(ctx context.Context, n *note.Note) (*note.Note, error) {
 	}
 }
 
+// Delete deletes an existing note with id from the store. It takes ctx
+// context in order to let the caller stop the execution in any form.
+// An error can also return if encountered and it can be ErrCancelled.
 func (s *Store) Delete(ctx context.Context, id uuid.UUID) error {
 
 	var (
@@ -140,6 +155,10 @@ func (s *Store) Delete(ctx context.Context, id uuid.UUID) error {
 	}
 }
 
+// Get gets the existing note with id from the store. It takes ctx
+// context in order to let the caller stop the execution in any form.
+// It will return either a note or an error if encountered. If there's
+// an error it can be a ErrNotFound or ErrCancelled.
 func (s *Store) Get(ctx context.Context, id uuid.UUID) (*note.Note, error) {
 
 	var (

@@ -20,15 +20,18 @@ var dummyNote = &note.Note{
 	IsFavorite:  ptrconv.BoolPointer(false),
 }
 
+// TestSuite is a shared tests for implementing the note.Store.
 type TestSuite struct {
 	suite.Suite
 	store note.Store
 }
 
+// SetStore sets store to the test suite to use.
 func (s *TestSuite) SetStore(store note.Store) {
 	s.store = store
 }
 
+// TestInsert test the store insert method.
 // TODO: Add test assertion where the ID is required
 func (s *TestSuite) TestInsert() {
 	require := s.Require()
@@ -63,6 +66,7 @@ func (s *TestSuite) TestInsert() {
 	})
 }
 
+// TestGet tests the store get method.
 func (s *TestSuite) TestGet() {
 	s.Run("Getting an existing note should return the note details", func() {
 		s.Require().NoError(s.store.Insert(dummyCtx, dummyNote))
@@ -89,14 +93,7 @@ func (s *TestSuite) TestGet() {
 	})
 }
 
-func (s *TestSuite) setupFunc() *note.Note {
-	n := copyutil.Shallow(dummyNote)
-	n.ID = uuid.New()
-	err := s.store.Insert(dummyCtx, n)
-	s.NoError(err)
-	return n
-}
-
+// TestUpdate tests the store update method.
 func (s *TestSuite) TestUpdate() {
 
 	assertNote := func(want *note.Note) {
@@ -143,6 +140,7 @@ func (s *TestSuite) TestUpdate() {
 	})
 }
 
+// TestDelete tests the store delete method.
 func (s *TestSuite) TestDelete() {
 
 	assert := func(id uuid.UUID) {
@@ -168,4 +166,12 @@ func (s *TestSuite) TestDelete() {
 		s.Error(err)
 		s.Equal(note.ErrCancelled, err)
 	})
+}
+
+func (s *TestSuite) setupFunc() *note.Note {
+	n := copyutil.Shallow(dummyNote)
+	n.ID = uuid.New()
+	err := s.store.Insert(dummyCtx, n)
+	s.NoError(err)
+	return n
 }

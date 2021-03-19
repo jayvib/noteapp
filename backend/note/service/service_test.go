@@ -13,6 +13,8 @@ import (
 	"time"
 )
 
+// TODO: Check also the created time
+
 var dummyCtx = context.TODO()
 
 var dummyNote = &note.Note{
