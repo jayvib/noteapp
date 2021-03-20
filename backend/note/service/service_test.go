@@ -9,6 +9,7 @@ import (
 	"noteapp/note/mocks"
 	"noteapp/note/util/copyutil"
 	"noteapp/pkg/ptrconv"
+	"noteapp/pkg/timestamp"
 	"testing"
 	"time"
 )
@@ -74,6 +75,29 @@ func (s *TestSuite) TestCreate() {
 		store.AssertExpectations(t)
 	})
 
+}
+
+func (s *TestSuite) TestUpdate() {
+	s.Run("Updating an existing note", func() {
+		want := copyutil.Shallow(dummyNote)
+		want.UpdatedTime = timestamp.GenerateTimestamp()
+
+		returnNote := copyutil.Shallow(dummyNote)
+		store := new(mocks.Store)
+		store.On("Update", mock.Anything, mock.MatchedBy(matchByID(want.ID))).Return(returnNote, nil).
+			Run(func(args mock.Arguments) {
+				noteParam := args[1].(*note.Note)
+				returnNote.UpdatedTime = noteParam.UpdatedTime
+			})
+		store.On("Get", mock.Anything, mock.MatchedBy(matchByID(want.ID))).Return(new(note.Note), nil)
+
+		svc := New(store)
+		got, err := svc.Update(dummyCtx, dummyNote)
+
+		s.NoError(err)
+		s.Equal(want, got)
+		s.NotNil(got.UpdatedTime)
+	})
 }
 
 func matchByID(id uuid.UUID) func(x interface{}) bool {

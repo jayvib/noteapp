@@ -26,6 +26,8 @@ type Note struct {
 	Content *string
 	// CreatedTime is the timestamp when the note was created.
 	CreatedTime *time.Time
+	// UpdateTime is the timestamp when the note last updated.
+	UpdatedTime *time.Time
 	// IsFavorite is a flag when then the note is marked as favorite
 	IsFavorite *bool
 }

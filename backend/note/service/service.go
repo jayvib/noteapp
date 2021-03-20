@@ -2,11 +2,13 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/google/uuid"
 	"noteapp/note"
 	"noteapp/note/util/copyutil"
 	"noteapp/pkg/ptrconv"
+	"noteapp/pkg/timestamp"
 	"time"
 )
 
@@ -15,12 +17,6 @@ var _ note.Service = (*Service)(nil)
 // Service implements note.Service interface.
 type Service struct {
 	store note.Store
-}
-
-// Update updates an existing note. It takes ctx to let the
-// caller stop the execution
-func (s *Service) Update(ctx context.Context, n *note.Note) (*note.Note, error) {
-	panic("implement me")
 }
 
 // New takes store and returns a service instance.
@@ -49,6 +45,31 @@ func (s *Service) Create(ctx context.Context, n *note.Note) (*note.Note, error) 
 	}
 
 	return copyutil.Shallow(n), nil
+}
+
+// Update updates an existing note. It takes ctx to let the
+// caller stop the execution
+func (s *Service) Update(ctx context.Context, n *note.Note) (*note.Note, error) {
+
+	cpyNote := copyutil.Shallow(n)
+
+	if cpyNote.ID == uuid.Nil {
+		return nil, errors.New("service/update: note id must not empty value")
+	}
+
+	// Check first if the note is exists
+	if isExists := s.checkNoteIfExists(ctx, cpyNote.ID); !isExists {
+		return nil, fmt.Errorf("service/update: note '%s' not found: %w", cpyNote.ID, note.ErrNotFound)
+	}
+
+	cpyNote.UpdatedTime = timestamp.GenerateTimestamp()
+
+	updatedNote, err := s.store.Update(ctx, cpyNote)
+	if err != nil {
+		return nil, err
+	}
+
+	return updatedNote, nil
 }
 
 func (s *Service) checkNoteIfExists(ctx context.Context, id uuid.UUID) bool {
