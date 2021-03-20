@@ -81,7 +81,6 @@ func (s *TestSuite) TestCreate() {
 		cpyNote := getNote()
 
 		store := new(mocks.Store)
-		store.On("Get", mock.Anything, mock.MatchedBy(matchByID(cpyNote.ID))).Return(nil, note.ErrNotFound)
 		store.On("Insert", mock.Anything, mock.AnythingOfType("*note.Note")).Return(note.ErrCancelled)
 
 		svc := New(store)
@@ -89,11 +88,12 @@ func (s *TestSuite) TestCreate() {
 		_, err := svc.Create(dummyCtx, cpyNote)
 
 		s.Error(err)
-
+		store.AssertExpectations(t)
 	})
 }
 
 func (s *TestSuite) TestUpdate() {
+	t := s.T()
 	s.Run("Updating an existing note", func() {
 		want := copyutil.Shallow(dummyNote)
 		want.UpdatedTime = timestamp.GenerateTimestamp()
@@ -113,6 +113,7 @@ func (s *TestSuite) TestUpdate() {
 		s.NoError(err)
 		s.Equal(want, got)
 		s.NotNil(got.UpdatedTime)
+		store.AssertExpectations(t)
 	})
 
 	s.Run("Updating a non-existing note should return an error", func() {
@@ -126,6 +127,7 @@ func (s *TestSuite) TestUpdate() {
 
 		s.Equal(note.ErrNotFound, errors.Unwrap(err))
 		s.Nil(got)
+		store.AssertExpectations(t)
 	})
 
 	s.Run("Updating a note with no ID should return an error", func() {
@@ -150,6 +152,7 @@ func (s *TestSuite) TestUpdate() {
 		_, err := svc.Update(dummyCtx, cpyNote)
 
 		s.Error(err)
+		store.AssertExpectations(t)
 
 	})
 }
