@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 	"noteapp/note"
 	"noteapp/note/util/copyutil"
 	"noteapp/pkg/ptrconv"
@@ -40,6 +41,8 @@ func (s *Service) Create(ctx context.Context, n *note.Note) (*note.Note, error) 
 	n.CreatedTime = ptrconv.TimePointer(time.Now().UTC())
 
 	err := s.store.Insert(ctx, n)
+
+	logrus.Debug(err)
 	if err != nil {
 		return nil, err
 	}

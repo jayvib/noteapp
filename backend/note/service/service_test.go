@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"noteapp/note"
@@ -24,6 +25,7 @@ var dummyNote = &note.Note{
 }
 
 func Test(t *testing.T) {
+	logrus.SetLevel(logrus.DebugLevel)
 	suite.Run(t, new(TestSuite))
 }
 
@@ -43,7 +45,7 @@ func (s *TestSuite) TestCreate() {
 		return cpyNote
 	}
 
-	s.Run("Inserting new note", func() {
+	s.Run("Creating a new note", func() {
 		cpyNote := getNote()
 
 		store := new(mocks.Store)
@@ -61,7 +63,7 @@ func (s *TestSuite) TestCreate() {
 		store.AssertExpectations(t)
 	})
 
-	s.Run("Inserting an existing note should return an error", func() {
+	s.Run("Creating an existing note should return an error", func() {
 		store := new(mocks.Store)
 		store.On("Get", mock.Anything, mock.MatchedBy(matchByID(dummyNote.ID))).Return(dummyNote, nil)
 
@@ -74,6 +76,21 @@ func (s *TestSuite) TestCreate() {
 		store.AssertExpectations(t)
 	})
 
+	s.Run("While inserting to  store it returns an error", func() {
+
+		cpyNote := getNote()
+
+		store := new(mocks.Store)
+		store.On("Get", mock.Anything, mock.MatchedBy(matchByID(cpyNote.ID))).Return(nil, note.ErrNotFound)
+		store.On("Insert", mock.Anything, mock.AnythingOfType("*note.Note")).Return(note.ErrCancelled)
+
+		svc := New(store)
+
+		_, err := svc.Create(dummyCtx, cpyNote)
+
+		s.Error(err)
+
+	})
 }
 
 func (s *TestSuite) TestUpdate() {
@@ -118,6 +135,22 @@ func (s *TestSuite) TestUpdate() {
 		svc := New(nil)
 		_, err := svc.Update(dummyCtx, want)
 		s.Error(err)
+	})
+
+	s.Run("While updating to  store it returns an error", func() {
+
+		cpyNote := copyutil.Shallow(dummyNote)
+
+		store := new(mocks.Store)
+		store.On("Get", mock.Anything, mock.MatchedBy(matchByID(cpyNote.ID))).Return(new(note.Note), nil)
+		store.On("Update", mock.Anything, mock.AnythingOfType("*note.Note")).Return(nil, note.ErrCancelled)
+
+		svc := New(store)
+
+		_, err := svc.Update(dummyCtx, cpyNote)
+
+		s.Error(err)
+
 	})
 }
 
