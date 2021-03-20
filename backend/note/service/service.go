@@ -17,6 +17,12 @@ type Service struct {
 	store note.Store
 }
 
+// Update updates an existing note. It takes ctx to let the
+// caller stop the execution
+func (s *Service) Update(ctx context.Context, n *note.Note) (*note.Note, error) {
+	panic("implement me")
+}
+
 // New takes store and returns a service instance.
 func New(store note.Store) *Service {
 	return &Service{store: store}
