@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
@@ -11,17 +12,15 @@ import (
 	"noteapp/pkg/ptrconv"
 	"noteapp/pkg/timestamp"
 	"testing"
-	"time"
 )
 
 var dummyCtx = context.TODO()
 
 var dummyNote = &note.Note{
-	ID:          uuid.New(),
-	Title:       ptrconv.StringPointer("First Test"),
-	Content:     ptrconv.StringPointer("Lorem Ipsum"),
-	CreatedTime: ptrconv.TimePointer(time.Now().UTC()),
-	IsFavorite:  ptrconv.BoolPointer(false),
+	ID:         uuid.New(),
+	Title:      ptrconv.StringPointer("First Test"),
+	Content:    ptrconv.StringPointer("Lorem Ipsum"),
+	IsFavorite: ptrconv.BoolPointer(false),
 }
 
 func Test(t *testing.T) {
@@ -97,6 +96,28 @@ func (s *TestSuite) TestUpdate() {
 		s.NoError(err)
 		s.Equal(want, got)
 		s.NotNil(got.UpdatedTime)
+	})
+
+	s.Run("Updating a non-existing note should return an error", func() {
+		want := copyutil.Shallow(dummyNote)
+
+		store := new(mocks.Store)
+		store.On("Get", mock.Anything, mock.MatchedBy(matchByID(want.ID))).Return(nil, note.ErrNotFound)
+
+		svc := New(store)
+		got, err := svc.Update(dummyCtx, dummyNote)
+
+		s.Equal(note.ErrNotFound, errors.Unwrap(err))
+		s.Nil(got)
+	})
+
+	s.Run("Updating a note with no ID should return an error", func() {
+		want := copyutil.Shallow(dummyNote)
+		want.ID = uuid.Nil
+
+		svc := New(nil)
+		_, err := svc.Update(dummyCtx, want)
+		s.Error(err)
 	})
 }
 
