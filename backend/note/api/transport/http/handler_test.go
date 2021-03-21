@@ -3,9 +3,8 @@ package http_test
 import (
 	"context"
 	"encoding/json"
-	"github.com/sirupsen/logrus"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 	"net/http"
 	"net/http/httptest"
 	"noteapp/note"
@@ -17,45 +16,60 @@ import (
 	"testing"
 )
 
-func TestGetHandler(t *testing.T) {
-	logrus.SetLevel(logrus.DebugLevel)
-	testNote := &note.Note{
-		Title:   ptrconv.StringPointer("Unit Test"),
-		Content: ptrconv.StringPointer("This is a test"),
-	}
+var dummyCtx = context.TODO()
 
-	memoryStore := memory.New()
+func TestHandler(t *testing.T) {
+	suite.Run(t, new(HandlerTestSuite))
+}
 
-	svc := service.New(memoryStore)
-	newNote, err := svc.Create(context.TODO(), testNote)
-	require.NoError(t, err)
+type HandlerTestSuite struct {
+	svc    note.Service
+	store  note.Store
+	routes http.Handler
+	suite.Suite
+	require *require.Assertions
+}
 
-	r := httptransport.MakeHandler(svc)
+func (s *HandlerTestSuite) SetupTest() {
+	s.store = memory.New()
+	s.svc = service.New(s.store)
+	s.routes = httptransport.MakeHandler(s.svc)
+	s.require = s.Require()
+}
 
-	responseRecorder := httptest.NewRecorder()
+func (s *HandlerTestSuite) TestGet() {
+	s.Run("Requesting a note successfully", func() {
+		testNote := &note.Note{
+			Title:   ptrconv.StringPointer("Unit Test"),
+			Content: ptrconv.StringPointer("This is a test"),
+		}
 
-	req := httptest.NewRequest(http.MethodGet, "/note/"+newNote.ID.String(), nil)
+		newNote, err := s.svc.Create(dummyCtx, testNote)
+		s.require.NoError(err)
 
-	r.ServeHTTP(responseRecorder, req)
+		responseRecorder := httptest.NewRecorder()
 
-	assert.Equal(t, http.StatusOK, responseRecorder.Code)
+		req := httptest.NewRequest(http.MethodGet, "/note/"+newNote.ID.String(), nil)
 
-	want := &note.Note{
-		ID:          newNote.ID,
-		Title:       testNote.Title,
-		Content:     testNote.Content,
-		CreatedTime: timestamp.GenerateTimestamp(),
-	}
+		s.routes.ServeHTTP(responseRecorder, req)
 
-	var got struct {
-		Note *note.Note `json:"note"`
-		Err  string     `json:"err,omitempty"`
-	}
+		s.Equal(http.StatusOK, responseRecorder.Code)
 
-	err = json.NewDecoder(responseRecorder.Body).Decode(&got)
-	assert.NoError(t, err)
+		want := &note.Note{
+			ID:          newNote.ID,
+			Title:       testNote.Title,
+			Content:     testNote.Content,
+			CreatedTime: timestamp.GenerateTimestamp(),
+		}
 
-	t.Log(want.CreatedTime)
-	t.Log(got.Note.CreatedTime)
-	assert.Equal(t, want, got.Note)
+		var got struct {
+			Note *note.Note `json:"note"`
+			Err  string     `json:"err,omitempty"`
+		}
+
+		err = json.NewDecoder(responseRecorder.Body).Decode(&got)
+		s.require.NoError(err)
+
+		s.Equal(want, got.Note)
+	})
 }
