@@ -41,7 +41,7 @@ func encodeError(err error, w http.ResponseWriter) {
 	switch err {
 	case note.ErrNotFound:
 		w.WriteHeader(http.StatusNotFound)
-	case note.ErrNilID:
+	case note.ErrNilID, note.ErrExists:
 		w.WriteHeader(http.StatusBadRequest)
 	default:
 		w.WriteHeader(http.StatusInternalServerError)

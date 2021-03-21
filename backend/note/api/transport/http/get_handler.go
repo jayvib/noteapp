@@ -9,6 +9,10 @@ import (
 	"noteapp/note"
 )
 
+type getService interface {
+	Get(ctx context.Context, id uuid.UUID) (*note.Note, error)
+}
+
 type getRequest struct {
 	ID uuid.UUID `json:"id"`
 }
@@ -17,7 +21,7 @@ type getResponse struct {
 	Note *note.Note `json:"note"`
 }
 
-func makeGetEndpoint(svc note.Service) endpoint.Endpoint {
+func makeGetEndpoint(svc getService) endpoint.Endpoint {
 	return func(ctx context.Context, req interface{}) (interface{}, error) {
 		request := req.(getRequest)
 		v, err := svc.Get(ctx, request.ID)

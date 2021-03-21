@@ -2,6 +2,7 @@ package http_test
 
 import (
 	"context"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"net/http"
@@ -15,6 +16,7 @@ import (
 var dummyCtx = context.TODO()
 
 func TestHandler(t *testing.T) {
+	logrus.SetLevel(logrus.DebugLevel)
 	suite.Run(t, new(HandlerTestSuite))
 }
 
