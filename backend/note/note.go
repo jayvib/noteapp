@@ -14,6 +14,8 @@ var (
 	ErrNotFound = errors.New("note: note not found")
 	// ErrCancelled is an error for any operation where its been cancelled.
 	ErrCancelled = context.Canceled
+	// ErrNilID is an error when the uuid ID is nil value.
+	ErrNilID = errors.New("note: note id must not empty value")
 )
 
 // Note represents a note.

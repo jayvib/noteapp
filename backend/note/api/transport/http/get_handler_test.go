@@ -64,7 +64,15 @@ func (s *HandlerTestSuite) TestGet() {
 		responseRecorder := makeRequest(uuid.New())
 		s.Equal(http.StatusNotFound, responseRecorder.Code)
 		got := decodeResponse(responseRecorder)
-		want := "note: note not found"
+		want := note.ErrNotFound.Error()
+		s.Equal(want, got.Err)
+	})
+
+	s.Run("Requesting a note but the ID is nil", func() {
+		responseRecorder := makeRequest(uuid.Nil)
+		s.Equal(http.StatusBadRequest, responseRecorder.Code)
+		got := decodeResponse(responseRecorder)
+		want := note.ErrNilID.Error()
 		s.Equal(want, got.Err)
 	})
 }

@@ -175,7 +175,7 @@ func (s *TestSuite) TestDelete() {
 	s.Run("Deleting a note with a Nil uuid", func() {
 		svc := New(nil)
 		err := svc.Delete(dummyCtx, uuid.Nil)
-		s.Equal(ErrNilID, err)
+		s.Equal(note.ErrNilID, err)
 	})
 }
 
@@ -208,7 +208,7 @@ func (s *TestSuite) TestGet() {
 	s.Run("Getting a note with a Nil uuid", func() {
 		svc := New(nil)
 		_, err := svc.Get(dummyCtx, uuid.Nil)
-		s.Equal(ErrNilID, err)
+		s.Equal(note.ErrNilID, err)
 	})
 }
 
