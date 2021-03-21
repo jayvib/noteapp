@@ -20,8 +20,8 @@ func (s *HandlerTestSuite) TestCreate() {
 	}
 
 	type response struct {
-		Note  *note.Note `json:"note"`
-		Error string     `json:"error,omitempty"`
+		Note    *note.Note `json:"note"`
+		Message string     `json:"message,omitempty"`
 	}
 
 	newNote := &note.Note{
@@ -65,8 +65,8 @@ func (s *HandlerTestSuite) TestCreate() {
 		s.Equal(want, rec.Code)
 	}
 
-	assertErr := func(resp response, want error) {
-		s.Equal(want.Error(), resp.Error)
+	assertMessage := func(resp response, want string) {
+		s.Equal(want, resp.Message)
 	}
 
 	s.Run("Requesting a create note successfully", func() {
@@ -87,7 +87,7 @@ func (s *HandlerTestSuite) TestCreate() {
 		responseRecorder := makeRequest(dummyCtx, newNote)
 		assertStatusCode(responseRecorder, http.StatusConflict)
 		resp := decodeResponse(responseRecorder)
-		assertErr(resp, note.ErrExists)
+		assertMessage(resp, "Note already exists")
 	})
 
 	s.Run("Cancelled request should return an error", func() {
@@ -97,6 +97,6 @@ func (s *HandlerTestSuite) TestCreate() {
 		responseRecorder := makeRequest(cancelledCtx, inputNote)
 		assertStatusCode(responseRecorder, http2.StatusClientClosed)
 		resp := decodeResponse(responseRecorder)
-		assertErr(resp, note.ErrCancelled)
+		assertMessage(resp, "Request cancelled")
 	})
 }

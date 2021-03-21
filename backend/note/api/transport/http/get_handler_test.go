@@ -13,8 +13,8 @@ import (
 func (s *HandlerTestSuite) TestGet() {
 
 	type response struct {
-		Note *note.Note `json:"note"`
-		Err  string     `json:"error,omitempty"`
+		Note    *note.Note `json:"note"`
+		Message string     `json:"message,omitempty"`
 	}
 
 	makeRequest := func(id uuid.UUID) *httptest.ResponseRecorder {
@@ -64,15 +64,15 @@ func (s *HandlerTestSuite) TestGet() {
 		responseRecorder := makeRequest(uuid.New())
 		s.Equal(http.StatusNotFound, responseRecorder.Code)
 		got := decodeResponse(responseRecorder)
-		want := note.ErrNotFound.Error()
-		s.Equal(want, got.Err)
+		want := "Note not found"
+		s.Equal(want, got.Message)
 	})
 
 	s.Run("Requesting a note but the ID is nil", func() {
 		responseRecorder := makeRequest(uuid.Nil)
 		s.Equal(http.StatusBadRequest, responseRecorder.Code)
 		got := decodeResponse(responseRecorder)
-		want := note.ErrNilID.Error()
-		s.Equal(want, got.Err)
+		want := "Empty note identifier"
+		s.Equal(want, got.Message)
 	})
 }

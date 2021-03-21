@@ -39,7 +39,11 @@ func makeCreateEndpoint(svc createService) endpoint.Endpoint {
 		logrus.Debug(request.Note)
 		newNote, err := svc.Create(ctx, request.Note)
 		if err != nil {
-			return errorWrapper{err: err}, nil
+			return errorWrapper{
+				origErr:    err,
+				message:    getMessage(err),
+				statusCode: getStatusCode(err),
+			}, nil
 		}
 		return createResponse{Note: newNote}, nil
 	}

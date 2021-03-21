@@ -26,7 +26,11 @@ func makeGetEndpoint(svc getService) endpoint.Endpoint {
 		request := req.(getRequest)
 		v, err := svc.Get(ctx, request.ID)
 		if err != nil {
-			return errorWrapper{err}, nil
+			return errorWrapper{
+				origErr:    err,
+				statusCode: getStatusCode(err),
+				message:    getMessage(err),
+			}, nil
 		}
 		return getResponse{Note: v}, nil
 	}
