@@ -8,6 +8,9 @@ import (
 	"noteapp/note"
 )
 
+// StatusClientClosed is an http status where the client cancels a request.
+const StatusClientClosed = 499
+
 type errorWrapper struct {
 	err error
 }
@@ -41,8 +44,12 @@ func encodeError(err error, w http.ResponseWriter) {
 	switch err {
 	case note.ErrNotFound:
 		w.WriteHeader(http.StatusNotFound)
-	case note.ErrNilID, note.ErrExists:
+	case note.ErrNilID:
 		w.WriteHeader(http.StatusBadRequest)
+	case note.ErrExists:
+		w.WriteHeader(http.StatusConflict)
+	case note.ErrCancelled:
+		w.WriteHeader(StatusClientClosed)
 	default:
 		w.WriteHeader(http.StatusInternalServerError)
 	}

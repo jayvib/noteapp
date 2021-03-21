@@ -2,11 +2,13 @@ package http_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"github.com/google/uuid"
 	"net/http"
 	"net/http/httptest"
 	"noteapp/note"
+	http2 "noteapp/note/api/transport/http"
 	"noteapp/note/util/copyutil"
 	"noteapp/pkg/ptrconv"
 )
@@ -22,79 +24,79 @@ func (s *HandlerTestSuite) TestCreate() {
 		Error string     `json:"error,omitempty"`
 	}
 
+	newNote := &note.Note{
+		Title:      ptrconv.StringPointer("Unit Test"),
+		Content:    ptrconv.StringPointer("This is a test"),
+		IsFavorite: ptrconv.BoolPointer(true),
+	}
+
+	makeRequest := func(ctx context.Context, n *note.Note) *httptest.ResponseRecorder {
+		responseRecorder := httptest.NewRecorder()
+
+		var body bytes.Buffer
+
+		err := json.NewEncoder(&body).Encode(&request{Note: n})
+		s.require.NoError(err)
+
+		req := httptest.NewRequest(http.MethodPost, "/note", &body)
+		req = req.WithContext(ctx)
+
+		s.routes.ServeHTTP(responseRecorder, req)
+		return responseRecorder
+	}
+
+	decodeResponse := func(rec *httptest.ResponseRecorder) response {
+		var resp response
+		err := json.NewDecoder(rec.Body).Decode(&resp)
+		s.require.NoError(err)
+		return resp
+	}
+
+	assertNote := func(want, got *note.Note) {
+		s.NotNil(got)
+		s.NotEqual(uuid.Nil, got.ID)
+		s.NotEmpty(got.CreatedTime)
+		got.ID = uuid.Nil
+		got.CreatedTime = nil
+		s.Equal(want, got)
+	}
+
+	assertStatusCode := func(rec *httptest.ResponseRecorder, want int) {
+		s.Equal(want, rec.Code)
+	}
+
+	assertErr := func(resp response, want error) {
+		s.Equal(want.Error(), resp.Error)
+	}
+
 	s.Run("Requesting a create note successfully", func() {
-
-		newNote := &note.Note{
-			Title:      ptrconv.StringPointer("Unit Test"),
-			Content:    ptrconv.StringPointer("This is a test"),
-			IsFavorite: ptrconv.BoolPointer(true),
-		}
-
 		want := copyutil.Shallow(newNote)
 		want.ID = uuid.Nil
 
-		responseRecorder := httptest.NewRecorder()
-
-		var body bytes.Buffer
-
-		err := json.NewEncoder(&body).Encode(&request{Note: newNote})
-		s.require.NoError(err)
-
-		req := httptest.NewRequest(http.MethodPost, "/note", &body)
-
-		s.routes.ServeHTTP(responseRecorder, req)
-
-		s.Equal(http.StatusOK, responseRecorder.Code)
-
-		var resp response
-
-		err = json.NewDecoder(responseRecorder.Body).Decode(&resp)
-		s.require.NoError(err)
-
-		got := resp.Note
-		s.NotNil(got)
-
-		s.NotEqual(uuid.Nil, got.ID)
-		s.NotEmpty(got.CreatedTime)
-
-		got.ID = uuid.Nil
-		got.CreatedTime = nil
-
-		s.Equal(want, got)
-
+		responseRecorder := makeRequest(dummyCtx, newNote)
+		assertStatusCode(responseRecorder, http.StatusOK)
+		resp := decodeResponse(responseRecorder)
+		assertNote(want, resp.Note)
 	})
 
 	s.Run("Requesting a create note but the ID is already existing should return an error", func() {
-
-		inputNote := &note.Note{
-			Title:      ptrconv.StringPointer("Unit Test"),
-			Content:    ptrconv.StringPointer("This is a test"),
-			IsFavorite: ptrconv.BoolPointer(true),
-		}
-
+		inputNote := copyutil.Shallow(newNote)
 		newNote, err := s.svc.Create(dummyCtx, inputNote)
 		s.require.NoError(err)
 
-		responseRecorder := httptest.NewRecorder()
+		responseRecorder := makeRequest(dummyCtx, newNote)
+		assertStatusCode(responseRecorder, http.StatusConflict)
+		resp := decodeResponse(responseRecorder)
+		assertErr(resp, note.ErrExists)
+	})
 
-		var body bytes.Buffer
-
-		err = json.NewEncoder(&body).Encode(&request{Note: newNote})
-		s.require.NoError(err)
-
-		req := httptest.NewRequest(http.MethodPost, "/note", &body)
-
-		s.routes.ServeHTTP(responseRecorder, req)
-
-		s.Equal(http.StatusBadRequest, responseRecorder.Code)
-
-		var resp response
-
-		err = json.NewDecoder(responseRecorder.Body).Decode(&resp)
-		s.require.NoError(err)
-
-		want := note.ErrExists.Error()
-
-		s.Equal(want, resp.Error)
+	s.Run("Cancelled request should return an error", func() {
+		inputNote := copyutil.Shallow(newNote)
+		cancelledCtx, cancel := context.WithCancel(dummyCtx)
+		cancel()
+		responseRecorder := makeRequest(cancelledCtx, inputNote)
+		assertStatusCode(responseRecorder, http2.StatusClientClosed)
+		resp := decodeResponse(responseRecorder)
+		assertErr(resp, note.ErrCancelled)
 	})
 }
