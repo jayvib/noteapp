@@ -13,13 +13,13 @@ var payload = `
 }
 `
 
-type Request struct {
+type request struct {
 	ID uuid.UUID `json:"id"`
 }
 
 func main() {
 
-	var req Request
+	var req request
 	err := json.Unmarshal([]byte(payload), &req)
 	if err != nil {
 		log.Fatal(err)
