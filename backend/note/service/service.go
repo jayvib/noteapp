@@ -15,6 +15,9 @@ import (
 
 var _ note.Service = (*Service)(nil)
 
+// ErrNilID is an error when the uuid ID is nil value.
+var ErrNilID = errors.New("service/update: note id must not empty value")
+
 // Service implements note.Service interface.
 type Service struct {
 	store note.Store
@@ -57,7 +60,7 @@ func (s *Service) Update(ctx context.Context, n *note.Note) (*note.Note, error) 
 	cpyNote := copyutil.Shallow(n)
 
 	if cpyNote.ID == uuid.Nil {
-		return nil, errors.New("service/update: note id must not empty value")
+		return nil, ErrNilID
 	}
 
 	// Check first if the note is exists
@@ -85,10 +88,24 @@ func (s *Service) checkNoteIfExists(ctx context.Context, id uuid.UUID) bool {
 
 // Delete deletes an existing note with an id.
 func (s *Service) Delete(ctx context.Context, id uuid.UUID) error {
-	panic("implement me")
+	if id == uuid.Nil {
+		return ErrNilID
+	}
+	return s.store.Delete(ctx, id)
 }
 
 // Get gets the note with an id.
 func (s *Service) Get(ctx context.Context, id uuid.UUID) (*note.Note, error) {
-	panic("implement me")
+
+	if id == uuid.Nil {
+		return nil, ErrNilID
+	}
+
+	n, err := s.store.Get(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return n, nil
+
 }

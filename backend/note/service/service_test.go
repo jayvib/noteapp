@@ -157,6 +157,61 @@ func (s *TestSuite) TestUpdate() {
 	})
 }
 
+func (s *TestSuite) TestDelete() {
+	t := s.T()
+	s.Run("Deleting a note", func() {
+		cpyNote := copyutil.Shallow(dummyNote)
+		store := new(mocks.Store)
+		store.On("Delete", mock.Anything, mock.MatchedBy(matchByID(cpyNote.ID))).Return(nil)
+
+		svc := New(store)
+
+		err := svc.Delete(dummyCtx, cpyNote.ID)
+		s.NoError(err)
+
+		store.AssertExpectations(t)
+	})
+
+	s.Run("Deleting a note with a Nil uuid", func() {
+		svc := New(nil)
+		err := svc.Delete(dummyCtx, uuid.Nil)
+		s.Equal(ErrNilID, err)
+	})
+}
+
+func (s *TestSuite) TestGet() {
+	t := s.T()
+	s.Run("Getting an existing note", func() {
+		cpyNote := copyutil.Shallow(dummyNote)
+		store := new(mocks.Store)
+		store.On("Get", mock.Anything, mock.MatchedBy(matchByID(cpyNote.ID))).Return(cpyNote, nil)
+
+		svc := New(store)
+		got, err := svc.Get(dummyCtx, cpyNote.ID)
+		s.NoError(err)
+
+		s.Equal(cpyNote, got)
+		store.AssertExpectations(t)
+	})
+
+	s.Run("Getting a none-existing note should return a not found error", func() {
+		store := new(mocks.Store)
+		store.On("Get", mock.Anything, mock.Anything).Return(nil, note.ErrNotFound)
+
+		svc := New(store)
+		_, err := svc.Get(dummyCtx, uuid.New())
+		s.Equal(note.ErrNotFound, err)
+
+		store.AssertExpectations(t)
+	})
+
+	s.Run("Getting a note with a Nil uuid", func() {
+		svc := New(nil)
+		_, err := svc.Get(dummyCtx, uuid.Nil)
+		s.Equal(ErrNilID, err)
+	})
+}
+
 func matchByID(id uuid.UUID) func(x interface{}) bool {
 	return func(x interface{}) bool {
 		switch v := x.(type) {
