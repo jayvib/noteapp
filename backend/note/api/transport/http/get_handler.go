@@ -5,7 +5,6 @@ import (
 	"github.com/go-kit/kit/endpoint"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	"github.com/sirupsen/logrus"
 	"net/http"
 	"noteapp/note"
 )
@@ -16,17 +15,14 @@ type getRequest struct {
 
 type getResponse struct {
 	Note *note.Note `json:"note"`
-	Err  string     `json:"err,omitempty"`
 }
 
 func makeGetEndpoint(svc note.Service) endpoint.Endpoint {
 	return func(ctx context.Context, req interface{}) (interface{}, error) {
 		request := req.(getRequest)
-		logrus.Debug("Got Request:", request)
 		v, err := svc.Get(ctx, request.ID)
-		logrus.Debug(v, err)
 		if err != nil {
-			return getResponse{Err: err.Error()}, nil
+			return errorWrapper{err}, nil
 		}
 		return getResponse{Note: v}, nil
 	}
