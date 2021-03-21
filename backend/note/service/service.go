@@ -8,9 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"noteapp/note"
 	"noteapp/note/util/copyutil"
-	"noteapp/pkg/ptrconv"
 	"noteapp/pkg/timestamp"
-	"time"
 )
 
 var _ note.Service = (*Service)(nil)
@@ -41,7 +39,7 @@ func (s *Service) Create(ctx context.Context, n *note.Note) (*note.Note, error) 
 		n.ID = uuid.New()
 	}
 
-	n.CreatedTime = ptrconv.TimePointer(time.Now().UTC())
+	n.CreatedTime = timestamp.GenerateTimestamp()
 
 	err := s.store.Insert(ctx, n)
 
