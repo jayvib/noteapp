@@ -3,7 +3,7 @@ package http_test
 import (
 	"encoding/json"
 	"github.com/google/uuid"
-	http2 "net/http"
+	"net/http"
 	"net/http/httptest"
 	"noteapp/note"
 	"noteapp/pkg/ptrconv"
@@ -17,7 +17,14 @@ func (s *HandlerTestSuite) TestGet() {
 		Err  string     `json:"error,omitempty"`
 	}
 
-	s.Run("Requesting a note successfully", func() {
+	makeRequest := func(id uuid.UUID) *httptest.ResponseRecorder {
+		responseRecorder := httptest.NewRecorder()
+		req := httptest.NewRequest(http.MethodGet, "/note/"+id.String(), nil)
+		s.routes.ServeHTTP(responseRecorder, req)
+		return responseRecorder
+	}
+
+	setupNewNote := func() *note.Note {
 		testNote := &note.Note{
 			Title:   ptrconv.StringPointer("Unit Test"),
 			Content: ptrconv.StringPointer("This is a test"),
@@ -25,44 +32,38 @@ func (s *HandlerTestSuite) TestGet() {
 
 		newNote, err := s.svc.Create(dummyCtx, testNote)
 		s.require.NoError(err)
+		return newNote
+	}
 
-		responseRecorder := httptest.NewRecorder()
+	decodeResponse := func(rec *httptest.ResponseRecorder) response {
+		var got response
+		err := json.NewDecoder(rec.Body).Decode(&got)
+		s.require.NoError(err)
+		return got
+	}
 
-		req := httptest.NewRequest(http2.MethodGet, "/note/"+newNote.ID.String(), nil)
+	s.Run("Requesting a note successfully", func() {
+		testNote := setupNewNote()
 
-		s.routes.ServeHTTP(responseRecorder, req)
-
-		s.Equal(http2.StatusOK, responseRecorder.Code)
+		responseRecorder := makeRequest(testNote.ID)
+		s.Equal(http.StatusOK, responseRecorder.Code)
 
 		want := &note.Note{
-			ID:          newNote.ID,
+			ID:          testNote.ID,
 			Title:       testNote.Title,
 			Content:     testNote.Content,
 			CreatedTime: timestamp.GenerateTimestamp(),
 		}
 
-		var got response
-
-		err = json.NewDecoder(responseRecorder.Body).Decode(&got)
-		s.require.NoError(err)
+		got := decodeResponse(responseRecorder)
 
 		s.Equal(want, got.Note)
 	})
 
 	s.Run("Requesting a note that not exists", func() {
-		responseRecorder := httptest.NewRecorder()
-		id := uuid.New()
-		req := httptest.NewRequest(http2.MethodGet, "/note/"+id.String(), nil)
-
-		s.routes.ServeHTTP(responseRecorder, req)
-
-		s.Equal(http2.StatusNotFound, responseRecorder.Code)
-
-		var got response
-
-		err := json.NewDecoder(responseRecorder.Body).Decode(&got)
-		s.require.NoError(err)
-
+		responseRecorder := makeRequest(uuid.New())
+		s.Equal(http.StatusNotFound, responseRecorder.Code)
+		got := decodeResponse(responseRecorder)
 		want := "note: note not found"
 		s.Equal(want, got.Err)
 	})

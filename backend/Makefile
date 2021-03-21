@@ -19,5 +19,4 @@ lint: lint-check-deps
 lint-check-deps:
 	@if [ -z `which golangci-lint` ]; then \
 		echo "[go get] installing golangci-lint"; \
-    GO111MODULE=on go get -u github.com/golangci/golangci-lint/cmd/golangci-lint; \
   fi
