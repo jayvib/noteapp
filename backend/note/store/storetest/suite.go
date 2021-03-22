@@ -7,6 +7,7 @@ import (
 	"noteapp/note"
 	"noteapp/note/util/copyutil"
 	"noteapp/pkg/ptrconv"
+	"noteapp/pkg/timestamp"
 	"time"
 )
 
@@ -104,10 +105,12 @@ func (s *TestSuite) TestUpdate() {
 
 	s.Run("Updating an existing product", func() {
 		want := s.setupFunc()
+		want.UpdatedTime = timestamp.GenerateTimestamp()
 
 		updated := &note.Note{
-			ID:      want.ID,
-			Content: ptrconv.StringPointer("Updated Content"),
+			ID:          want.ID,
+			Content:     ptrconv.StringPointer("Updated Content"),
+			UpdatedTime: timestamp.GenerateTimestamp(),
 		}
 
 		updated, err := s.store.Update(dummyCtx, updated)

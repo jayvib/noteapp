@@ -24,7 +24,7 @@ type createResponse struct {
 
 func decodeCreateRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	var req createRequest
-
+	// TODO: Handle the body close
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		return nil, err

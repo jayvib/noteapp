@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/jinzhu/copier"
+	"github.com/sirupsen/logrus"
 	"noteapp/note"
 	"noteapp/note/util/copyutil"
 	"sync"
@@ -104,8 +105,20 @@ func (s *Store) Update(ctx context.Context, n *note.Note) (*note.Note, error) {
 			return
 		}
 
-		_ = copier.CopyWithOption(exist, n, copier.Option{IgnoreEmpty: true, DeepCopy: true})
+		// I think there's a bug with copier
+		// because the UpdateTime is not copied
+		// to the toValue
+		err := copier.CopyWithOption(exist, n, copier.Option{IgnoreEmpty: true, DeepCopy: true})
+		if err != nil {
+			errChan <- err
+			return
+		}
 
+		logrus.Debug(exist.UpdatedTime, n.UpdatedTime)
+		// Workaround 💪😅
+		exist.UpdatedTime = n.UpdatedTime
+
+		logrus.Debug(exist.UpdatedTime)
 		noteChan <- copyutil.Shallow(exist)
 	}()
 

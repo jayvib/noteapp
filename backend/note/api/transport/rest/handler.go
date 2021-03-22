@@ -23,7 +23,15 @@ func MakeHandler(svc note.Service) http.Handler {
 		encodeResponse,
 	)
 
+	updateHandler := httptransport.NewServer(
+		makeUpdateEndpoint(svc),
+		decodeUpdateRequest,
+		encodeResponse,
+	)
+
 	router.Handle("/note/{id}", getHandler).Methods(http.MethodGet)
 	router.Handle("/note", createHandler).Methods(http.MethodPost)
+	router.Handle("/note", updateHandler).Methods(http.MethodPut)
+
 	return router
 }

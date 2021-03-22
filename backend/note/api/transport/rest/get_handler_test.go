@@ -12,11 +12,6 @@ import (
 
 func (s *HandlerTestSuite) TestGet() {
 
-	type response struct {
-		Note    *note.Note `json:"note"`
-		Message string     `json:"message,omitempty"`
-	}
-
 	makeRequest := func(id uuid.UUID) *httptest.ResponseRecorder {
 		responseRecorder := httptest.NewRecorder()
 		req := httptest.NewRequest(http.MethodGet, "/note/"+id.String(), nil)

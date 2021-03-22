@@ -15,15 +15,6 @@ import (
 
 func (s *HandlerTestSuite) TestCreate() {
 
-	type request struct {
-		Note *note.Note `json:"note"`
-	}
-
-	type response struct {
-		Note    *note.Note `json:"note"`
-		Message string     `json:"message,omitempty"`
-	}
-
 	newNote := &note.Note{
 		Title:      ptrconv.StringPointer("Unit Test"),
 		Content:    ptrconv.StringPointer("This is a test"),
@@ -43,13 +34,6 @@ func (s *HandlerTestSuite) TestCreate() {
 
 		s.routes.ServeHTTP(responseRecorder, req)
 		return responseRecorder
-	}
-
-	decodeResponse := func(rec *httptest.ResponseRecorder) response {
-		var resp response
-		err := json.NewDecoder(rec.Body).Decode(&resp)
-		s.require.NoError(err)
-		return resp
 	}
 
 	assertNote := func(want, got *note.Note) {
@@ -75,7 +59,7 @@ func (s *HandlerTestSuite) TestCreate() {
 
 		responseRecorder := makeRequest(dummyCtx, newNote)
 		assertStatusCode(responseRecorder, http.StatusOK)
-		resp := decodeResponse(responseRecorder)
+		resp := decodeResponse(s.Suite, responseRecorder)
 		assertNote(want, resp.Note)
 	})
 
@@ -86,7 +70,7 @@ func (s *HandlerTestSuite) TestCreate() {
 
 		responseRecorder := makeRequest(dummyCtx, newNote)
 		assertStatusCode(responseRecorder, http.StatusConflict)
-		resp := decodeResponse(responseRecorder)
+		resp := decodeResponse(s.Suite, responseRecorder)
 		assertMessage(resp, "Note already exists")
 	})
 
@@ -96,7 +80,7 @@ func (s *HandlerTestSuite) TestCreate() {
 		cancel()
 		responseRecorder := makeRequest(cancelledCtx, inputNote)
 		assertStatusCode(responseRecorder, http2.StatusClientClosed)
-		resp := decodeResponse(responseRecorder)
+		resp := decodeResponse(s.Suite, responseRecorder)
 		assertMessage(resp, "Request cancelled")
 	})
 }
