@@ -15,11 +15,7 @@ import (
 
 func (s *HandlerTestSuite) TestUpdate() {
 
-	newNote := &note.Note{
-		Title:      ptrconv.StringPointer("Unit Test"),
-		Content:    ptrconv.StringPointer("This is a test"),
-		IsFavorite: ptrconv.BoolPointer(true),
-	}
+	newNote := copyutil.Shallow(dummyNote)
 
 	setup := func() *note.Note {
 		newNote, err := s.svc.Create(dummyCtx, copyutil.Shallow(newNote))

@@ -10,28 +10,19 @@ import (
 	"noteapp/note"
 	http2 "noteapp/note/api/transport/rest"
 	"noteapp/note/util/copyutil"
-	"noteapp/pkg/ptrconv"
 )
 
 func (s *HandlerTestSuite) TestCreate() {
 
-	newNote := &note.Note{
-		Title:      ptrconv.StringPointer("Unit Test"),
-		Content:    ptrconv.StringPointer("This is a test"),
-		IsFavorite: ptrconv.BoolPointer(true),
-	}
+	newNote := copyutil.Shallow(dummyNote)
 
 	makeRequest := func(ctx context.Context, n *note.Note) *httptest.ResponseRecorder {
 		responseRecorder := httptest.NewRecorder()
-
 		var body bytes.Buffer
-
 		err := json.NewEncoder(&body).Encode(&request{Note: n})
 		s.require.NoError(err)
-
 		req := httptest.NewRequest(http.MethodPost, "/note", &body)
 		req = req.WithContext(ctx)
-
 		s.routes.ServeHTTP(responseRecorder, req)
 		return responseRecorder
 	}

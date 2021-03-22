@@ -3,7 +3,6 @@ package rest_test
 import (
 	"context"
 	"encoding/json"
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"net/http"
@@ -12,10 +11,17 @@ import (
 	"noteapp/note/api/transport/rest"
 	"noteapp/note/service"
 	"noteapp/note/store/memory"
+	"noteapp/pkg/ptrconv"
 	"testing"
 )
 
 var dummyCtx = context.TODO()
+
+var dummyNote = &note.Note{
+	Title:      ptrconv.StringPointer("Unit Test"),
+	Content:    ptrconv.StringPointer("This is a test"),
+	IsFavorite: ptrconv.BoolPointer(true),
+}
 
 type request struct {
 	Note *note.Note `json:"note"`
@@ -27,7 +33,6 @@ type response struct {
 }
 
 func TestHandler(t *testing.T) {
-	logrus.SetLevel(logrus.DebugLevel)
 	suite.Run(t, new(HandlerTestSuite))
 }
 
