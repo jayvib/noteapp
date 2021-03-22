@@ -1,4 +1,4 @@
-package http_test
+package rest_test
 
 import (
 	"bytes"
@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"noteapp/note"
-	http2 "noteapp/note/api/transport/http"
+	http2 "noteapp/note/api/transport/rest"
 	"noteapp/note/util/copyutil"
 	"noteapp/pkg/ptrconv"
 )

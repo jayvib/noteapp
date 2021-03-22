@@ -1,4 +1,4 @@
-package http_test
+package rest_test
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"net/http"
 	"noteapp/note"
-	httptransport "noteapp/note/api/transport/http"
+	"noteapp/note/api/transport/rest"
 	"noteapp/note/service"
 	"noteapp/note/store/memory"
 	"testing"
@@ -31,6 +31,6 @@ type HandlerTestSuite struct {
 func (s *HandlerTestSuite) SetupTest() {
 	s.store = memory.New()
 	s.svc = service.New(s.store)
-	s.routes = httptransport.MakeHandler(s.svc)
+	s.routes = rest.MakeHandler(s.svc)
 	s.require = s.Require()
 }

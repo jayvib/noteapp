@@ -1,4 +1,4 @@
-package http
+package rest
 
 import (
 	httptransport "github.com/go-kit/kit/transport/http"
