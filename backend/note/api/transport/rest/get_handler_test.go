@@ -42,7 +42,7 @@ func (s *HandlerTestSuite) TestGet() {
 			IsFavorite:  testNote.IsFavorite,
 		}
 
-		got := decodeResponse(s.Suite, responseRecorder)
+		got := s.decodeResponse(responseRecorder)
 
 		s.Equal(want, got.Note)
 	})
@@ -50,17 +50,17 @@ func (s *HandlerTestSuite) TestGet() {
 	s.Run("Requesting a note that not exists", func() {
 		responseRecorder := makeRequest(dummyCtx, uuid.New())
 		s.Equal(http.StatusNotFound, responseRecorder.Code)
-		got := decodeResponse(s.Suite, responseRecorder)
+		got := s.decodeResponse(responseRecorder)
 		want := "Note not found"
-		assertMessage(s.Suite, got, want)
+		s.assertMessage(got, want)
 	})
 
 	s.Run("Requesting a note but the ID is nil", func() {
 		responseRecorder := makeRequest(dummyCtx, uuid.Nil)
 		s.Equal(http.StatusBadRequest, responseRecorder.Code)
-		got := decodeResponse(s.Suite, responseRecorder)
+		got := s.decodeResponse(responseRecorder)
 		want := "Empty note identifier"
-		assertMessage(s.Suite, got, want)
+		s.assertMessage(got, want)
 	})
 
 	s.Run("Cancelled request should return an error", func() {
@@ -69,7 +69,7 @@ func (s *HandlerTestSuite) TestGet() {
 		cancel()
 		responseRecorder := makeRequest(cancelledCtx, inputNote.ID)
 		s.assertStatusCode(responseRecorder, http2.StatusClientClosed)
-		resp := decodeResponse(s.Suite, responseRecorder)
-		assertMessage(s.Suite, resp, "Request cancelled")
+		resp := s.decodeResponse(responseRecorder)
+		s.assertMessage(resp, "Request cancelled")
 	})
 }

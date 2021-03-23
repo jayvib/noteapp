@@ -51,14 +51,14 @@ func (s *HandlerTestSuite) SetupTest() {
 	s.require = s.Require()
 }
 
-func decodeResponse(s suite.Suite, rec *httptest.ResponseRecorder) response {
+func (s *HandlerTestSuite) decodeResponse(rec *httptest.ResponseRecorder) response {
 	var resp response
 	err := json.NewDecoder(rec.Body).Decode(&resp)
 	s.Require().NoError(err)
 	return resp
 }
 
-func assertMessage(s suite.Suite, resp response, want string) {
+func (s *HandlerTestSuite) assertMessage(resp response, want string) {
 	s.Equal(want, resp.Message)
 }
 

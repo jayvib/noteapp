@@ -53,7 +53,7 @@ func (s *HandlerTestSuite) TestUpdate() {
 
 		responseRecorder := makeRequest(dummyCtx, updatedNote)
 		s.assertStatusCode(responseRecorder, http.StatusOK)
-		resp := decodeResponse(s.Suite, responseRecorder)
+		resp := s.decodeResponse(responseRecorder)
 		assertNote(want, resp.Note)
 	})
 
@@ -62,8 +62,8 @@ func (s *HandlerTestSuite) TestUpdate() {
 		updatedNote.ID = uuid.New()
 		responseRecorder := makeRequest(dummyCtx, updatedNote)
 		s.assertStatusCode(responseRecorder, http.StatusNotFound)
-		resp := decodeResponse(s.Suite, responseRecorder)
-		assertMessage(s.Suite, resp, "Note not found")
+		resp := s.decodeResponse(responseRecorder)
+		s.assertMessage(resp, "Note not found")
 	})
 
 	s.Run("Cancelled request should return an error", func() {
@@ -75,7 +75,7 @@ func (s *HandlerTestSuite) TestUpdate() {
 		cancel()
 		responseRecorder := makeRequest(cancelledCtx, updatedNote)
 		s.assertStatusCode(responseRecorder, http2.StatusClientClosed)
-		resp := decodeResponse(s.Suite, responseRecorder)
-		assertMessage(s.Suite, resp, "Request cancelled")
+		resp := s.decodeResponse(responseRecorder)
+		s.assertMessage(resp, "Request cancelled")
 	})
 }

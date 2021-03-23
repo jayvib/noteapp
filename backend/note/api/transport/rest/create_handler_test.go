@@ -46,7 +46,7 @@ func (s *HandlerTestSuite) TestCreate() {
 
 		responseRecorder := makeRequest(dummyCtx, newNote)
 		assertStatusCode(responseRecorder, http.StatusOK)
-		resp := decodeResponse(s.Suite, responseRecorder)
+		resp := s.decodeResponse(responseRecorder)
 		assertNote(want, resp.Note)
 	})
 
@@ -57,8 +57,8 @@ func (s *HandlerTestSuite) TestCreate() {
 
 		responseRecorder := makeRequest(dummyCtx, newNote)
 		assertStatusCode(responseRecorder, http.StatusConflict)
-		resp := decodeResponse(s.Suite, responseRecorder)
-		assertMessage(s.Suite, resp, "Note already exists")
+		resp := s.decodeResponse(responseRecorder)
+		s.assertMessage(resp, "Note already exists")
 	})
 
 	s.Run("Cancelled request should return an error", func() {
@@ -67,7 +67,7 @@ func (s *HandlerTestSuite) TestCreate() {
 		cancel()
 		responseRecorder := makeRequest(cancelledCtx, inputNote)
 		assertStatusCode(responseRecorder, http2.StatusClientClosed)
-		resp := decodeResponse(s.Suite, responseRecorder)
-		assertMessage(s.Suite, resp, "Request cancelled")
+		resp := s.decodeResponse(responseRecorder)
+		s.assertMessage(resp, "Request cancelled")
 	})
 }
