@@ -61,3 +61,7 @@ func decodeResponse(s suite.Suite, rec *httptest.ResponseRecorder) response {
 func assertMessage(s suite.Suite, resp response, want string) {
 	s.Equal(want, resp.Message)
 }
+
+func (s *HandlerTestSuite) assertStatusCode(rec *httptest.ResponseRecorder, want int) {
+	s.Equal(want, rec.Code)
+}

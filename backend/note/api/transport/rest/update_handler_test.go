@@ -38,10 +38,6 @@ func (s *HandlerTestSuite) TestUpdate() {
 		return responseRecorder
 	}
 
-	assertStatusCode := func(rec *httptest.ResponseRecorder, want int) {
-		s.Equal(want, rec.Code)
-	}
-
 	assertNote := func(want, got *note.Note) {
 		s.Equal(want, got)
 	}
@@ -56,7 +52,7 @@ func (s *HandlerTestSuite) TestUpdate() {
 		want.UpdatedTime = timestamp.GenerateTimestamp()
 
 		responseRecorder := makeRequest(dummyCtx, updatedNote)
-		assertStatusCode(responseRecorder, http.StatusOK)
+		s.assertStatusCode(responseRecorder, http.StatusOK)
 		resp := decodeResponse(s.Suite, responseRecorder)
 		assertNote(want, resp.Note)
 	})
@@ -65,7 +61,7 @@ func (s *HandlerTestSuite) TestUpdate() {
 		updatedNote := copyutil.Shallow(dummyNote)
 		updatedNote.ID = uuid.New()
 		responseRecorder := makeRequest(dummyCtx, updatedNote)
-		assertStatusCode(responseRecorder, http.StatusNotFound)
+		s.assertStatusCode(responseRecorder, http.StatusNotFound)
 		resp := decodeResponse(s.Suite, responseRecorder)
 		assertMessage(s.Suite, resp, "Note not found")
 	})
@@ -75,13 +71,10 @@ func (s *HandlerTestSuite) TestUpdate() {
 		updatedNote := copyutil.Shallow(setup())
 		updatedNote.Title = ptrconv.StringPointer("Updated Title")
 
-		logrus.Debug(s.store.Get(dummyCtx, updatedNote.ID))
-		logrus.Debug(updatedNote.ID)
-
 		cancelledCtx, cancel := context.WithCancel(dummyCtx)
 		cancel()
 		responseRecorder := makeRequest(cancelledCtx, updatedNote)
-		assertStatusCode(responseRecorder, http2.StatusClientClosed)
+		s.assertStatusCode(responseRecorder, http2.StatusClientClosed)
 		resp := decodeResponse(s.Suite, responseRecorder)
 		assertMessage(s.Suite, resp, "Request cancelled")
 	})
