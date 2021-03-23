@@ -3,10 +3,10 @@ package rest
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"github.com/sirupsen/logrus"
 	"net/http"
 	"noteapp/note"
+	"noteapp/pkg/util/errorutil"
 )
 
 // StatusClientClosed is an http status where the client cancels a request.
@@ -19,15 +19,7 @@ type errorWrapper struct {
 }
 
 func (e errorWrapper) error() error {
-	return unwrapErr(e.origErr)
-}
-
-func unwrapErr(e error) error {
-	err := errors.Unwrap(e)
-	if err == nil {
-		return e
-	}
-	return err
+	return errorutil.TryUnwrapErr(e.origErr)
 }
 
 func (e errorWrapper) Error() string {
@@ -60,7 +52,7 @@ func encodeError(ew errorWrapper, w http.ResponseWriter) {
 }
 
 func getStatusCode(err error) (statusCode int) {
-	err = unwrapErr(err)
+	err = errorutil.TryUnwrapErr(err)
 	switch err {
 	case note.ErrNotFound:
 		statusCode = http.StatusNotFound
@@ -77,7 +69,7 @@ func getStatusCode(err error) (statusCode int) {
 }
 
 func getMessage(err error) (message string) {
-	causeErr := unwrapErr(err)
+	causeErr := errorutil.TryUnwrapErr(err)
 	switch causeErr {
 	case note.ErrExists:
 		message = "Note already exists"

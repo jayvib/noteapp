@@ -57,3 +57,7 @@ func decodeResponse(s suite.Suite, rec *httptest.ResponseRecorder) response {
 	s.Require().NoError(err)
 	return resp
 }
+
+func assertMessage(s suite.Suite, resp response, want string) {
+	s.Equal(want, resp.Message)
+}

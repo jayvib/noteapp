@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"errors"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/mock"
@@ -12,6 +11,7 @@ import (
 	"noteapp/note/util/copyutil"
 	"noteapp/pkg/ptrconv"
 	"noteapp/pkg/timestamp"
+	"noteapp/pkg/util/errorutil"
 	"testing"
 )
 
@@ -125,7 +125,7 @@ func (s *TestSuite) TestUpdate() {
 		svc := New(store)
 		got, err := svc.Update(dummyCtx, dummyNote)
 
-		s.Equal(note.ErrNotFound, errors.Unwrap(err))
+		s.Equal(note.ErrNotFound, errorutil.TryUnwrapErr(err))
 		s.Nil(got)
 		store.AssertExpectations(t)
 	})

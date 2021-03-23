@@ -27,7 +27,12 @@ func New(store note.Store) *Service {
 func (s *Service) Create(ctx context.Context, n *note.Note) (*note.Note, error) {
 
 	if n.ID != uuid.Nil {
-		if isExists := s.checkNoteIfExists(ctx, n.ID); isExists {
+		isExists, err := s.checkNoteIfExists(ctx, n.ID)
+		if err != nil {
+			return nil, err
+		}
+
+		if isExists {
 			errMessageFormat := "service: unable to create a note with id '%s' because it exists: %w"
 			return nil, fmt.Errorf(errMessageFormat, n.ID, note.ErrExists)
 		}
@@ -58,7 +63,12 @@ func (s *Service) Update(ctx context.Context, n *note.Note) (*note.Note, error) 
 	}
 
 	// Check first if the note is exists
-	if isExists := s.checkNoteIfExists(ctx, cpyNote.ID); !isExists {
+	isExists, err := s.checkNoteIfExists(ctx, cpyNote.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	if !isExists {
 		return nil, fmt.Errorf("service/update: note '%s' not found: %w", cpyNote.ID, note.ErrNotFound)
 	}
 
@@ -72,12 +82,13 @@ func (s *Service) Update(ctx context.Context, n *note.Note) (*note.Note, error) 
 	return updatedNote, nil
 }
 
-func (s *Service) checkNoteIfExists(ctx context.Context, id uuid.UUID) bool {
+func (s *Service) checkNoteIfExists(ctx context.Context, id uuid.UUID) (bool, error) {
 	existingNote, err := s.store.Get(ctx, id)
+	logrus.Debug("checking note:", existingNote, err)
 	if err == nil && existingNote != nil {
-		return true
+		return true, nil
 	}
-	return false
+	return false, err
 }
 
 // Delete deletes an existing note with an id.

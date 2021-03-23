@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/go-kit/kit/endpoint"
+	"github.com/sirupsen/logrus"
 	"net/http"
 	"noteapp/note"
 )
@@ -40,6 +41,7 @@ func makeUpdateEndpoint(svc updateService) endpoint.Endpoint {
 	return func(ctx context.Context, req interface{}) (interface{}, error) {
 		request := req.(updateRequest)
 
+		logrus.Debug("request:", request.Note.ID)
 		updatedNote, err := svc.Update(ctx, request.Note)
 		if err != nil {
 			return errorWrapper{
