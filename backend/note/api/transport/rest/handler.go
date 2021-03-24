@@ -29,9 +29,16 @@ func MakeHandler(svc note.Service) http.Handler {
 		encodeResponse,
 	)
 
+	deleteHandler := httptransport.NewServer(
+		makeDeleteEndpoint(svc),
+		decodeDeleteRequest,
+		encodeResponse,
+	)
+
 	router.Handle("/note/{id}", getHandler).Methods(http.MethodGet)
 	router.Handle("/note", createHandler).Methods(http.MethodPost)
 	router.Handle("/note", updateHandler).Methods(http.MethodPut)
+	router.Handle("/note/{id}", deleteHandler).Methods(http.MethodDelete)
 
 	return router
 }

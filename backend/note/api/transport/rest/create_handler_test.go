@@ -36,16 +36,12 @@ func (s *HandlerTestSuite) TestCreate() {
 		s.Equal(want, got)
 	}
 
-	assertStatusCode := func(rec *httptest.ResponseRecorder, want int) {
-		s.Equal(want, rec.Code)
-	}
-
 	s.Run("Requesting a create note successfully", func() {
 		want := copyutil.Shallow(newNote)
 		want.ID = uuid.Nil
 
 		responseRecorder := makeRequest(dummyCtx, newNote)
-		assertStatusCode(responseRecorder, http.StatusOK)
+		s.assertStatusCode(responseRecorder, http.StatusOK)
 		resp := s.decodeResponse(responseRecorder)
 		assertNote(want, resp.Note)
 	})
@@ -56,7 +52,7 @@ func (s *HandlerTestSuite) TestCreate() {
 		s.require.NoError(err)
 
 		responseRecorder := makeRequest(dummyCtx, newNote)
-		assertStatusCode(responseRecorder, http.StatusConflict)
+		s.assertStatusCode(responseRecorder, http.StatusConflict)
 		resp := s.decodeResponse(responseRecorder)
 		s.assertMessage(resp, "Note already exists")
 	})
@@ -66,7 +62,7 @@ func (s *HandlerTestSuite) TestCreate() {
 		cancelledCtx, cancel := context.WithCancel(dummyCtx)
 		cancel()
 		responseRecorder := makeRequest(cancelledCtx, inputNote)
-		assertStatusCode(responseRecorder, http2.StatusClientClosed)
+		s.assertStatusCode(responseRecorder, http2.StatusClientClosed)
 		resp := s.decodeResponse(responseRecorder)
 		s.assertMessage(resp, "Request cancelled")
 	})
