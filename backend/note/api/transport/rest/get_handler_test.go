@@ -49,7 +49,7 @@ func (s *HandlerTestSuite) TestGet() {
 
 	s.Run("Requesting a note that not exists", func() {
 		responseRecorder := makeRequest(dummyCtx, uuid.New())
-		s.Equal(http.StatusNotFound, responseRecorder.Code)
+		s.assertStatusCode(responseRecorder, http.StatusNotFound)
 		got := s.decodeResponse(responseRecorder)
 		want := "Note not found"
 		s.assertMessage(got, want)
@@ -57,7 +57,7 @@ func (s *HandlerTestSuite) TestGet() {
 
 	s.Run("Requesting a note but the ID is nil", func() {
 		responseRecorder := makeRequest(dummyCtx, uuid.Nil)
-		s.Equal(http.StatusBadRequest, responseRecorder.Code)
+		s.assertStatusCode(responseRecorder, http.StatusBadRequest)
 		got := s.decodeResponse(responseRecorder)
 		want := "Empty note identifier"
 		s.assertMessage(got, want)

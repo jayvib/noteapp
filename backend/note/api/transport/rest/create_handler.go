@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/go-kit/kit/endpoint"
-	"github.com/sirupsen/logrus"
 	"net/http"
 	"noteapp/note"
 )
@@ -22,13 +21,18 @@ type createResponse struct {
 	Note *note.Note `json:"note"`
 }
 
-func decodeCreateRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeCreateRequest(_ context.Context, r *http.Request) (response interface{}, err error) {
 	var req createRequest
-	// TODO: Handle the body close
-	err := json.NewDecoder(r.Body).Decode(&req)
+	err = json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		return nil, err
 	}
+	defer func() {
+		cerr := r.Body.Close()
+		if cerr != nil && err == nil {
+			err = cerr
+		}
+	}()
 
 	return req, nil
 }
@@ -36,7 +40,6 @@ func decodeCreateRequest(_ context.Context, r *http.Request) (interface{}, error
 func makeCreateEndpoint(svc createService) endpoint.Endpoint {
 	return func(ctx context.Context, req interface{}) (interface{}, error) {
 		request := req.(createRequest)
-		logrus.Debug(request.Note)
 		newNote, err := svc.Create(ctx, request.Note)
 		if err != nil {
 			return errorWrapper{
