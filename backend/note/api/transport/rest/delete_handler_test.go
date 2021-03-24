@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"noteapp/note"
+	http2 "noteapp/note/api/transport/rest"
 	"noteapp/note/util/copyutil"
 )
 
@@ -29,5 +30,23 @@ func (s *HandlerTestSuite) TestDelete() {
 		newNote := setup()
 		responseRecorder := makeRequest(dummyCtx, newNote.ID)
 		s.assertStatusCode(responseRecorder, http.StatusOK)
+	})
+
+	s.Run("Requesting a note but the ID is nil", func() {
+		responseRecorder := makeRequest(dummyCtx, uuid.Nil)
+		s.Equal(http.StatusBadRequest, responseRecorder.Code)
+		got := s.decodeResponse(responseRecorder)
+		want := "Empty note identifier"
+		s.assertMessage(got, want)
+	})
+
+	s.Run("Cancelled request should return an error", func() {
+		newNote := setup()
+		cancelledCtx, cancel := context.WithCancel(dummyCtx)
+		cancel()
+		responseRecorder := makeRequest(cancelledCtx, newNote.ID)
+		s.assertStatusCode(responseRecorder, http2.StatusClientClosed)
+		resp := s.decodeResponse(responseRecorder)
+		s.assertMessage(resp, "Request cancelled")
 	})
 }
