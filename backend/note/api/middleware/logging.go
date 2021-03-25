@@ -2,12 +2,13 @@ package middleware
 
 import (
 	"github.com/gorilla/handlers"
+	"github.com/gorilla/mux"
 	"net/http"
 	"os"
 )
 
 // Middleware is an http middleware function type.
-type Middleware func(h http.Handler) http.Handler
+type Middleware mux.MiddlewareFunc
 
 // Apply applies the middlewares mws to http handler h and return
 // the wrapped handler.

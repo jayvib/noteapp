@@ -1,4 +1,4 @@
-package rest_test
+package rest
 
 import (
 	"bytes"
@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"noteapp/note"
-	http2 "noteapp/note/api/transport/rest"
 	"noteapp/note/util/copyutil"
 	"noteapp/pkg/ptrconv"
 	"noteapp/pkg/timestamp"
@@ -74,7 +73,7 @@ func (s *HandlerTestSuite) TestUpdate() {
 		cancelledCtx, cancel := context.WithCancel(dummyCtx)
 		cancel()
 		responseRecorder := makeRequest(cancelledCtx, updatedNote)
-		s.assertStatusCode(responseRecorder, http2.StatusClientClosed)
+		s.assertStatusCode(responseRecorder, StatusClientClosed)
 		resp := s.decodeResponse(responseRecorder)
 		s.assertMessage(resp, "Request cancelled")
 	})

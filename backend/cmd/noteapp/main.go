@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/gorilla/mux"
 	"log"
 	"noteapp/api/server"
 	"noteapp/note/api/middleware"
@@ -13,13 +14,12 @@ const port = 50001
 
 func main() {
 	svc := noteservice.New(memory.New())
-	handler := rest.MakeHandler(svc)
 	srv := server.New(&server.Config{
 		Port: port,
-		Middlewares: []middleware.Middleware{
+		Middlewares: []mux.MiddlewareFunc{
 			middleware.Logging,
 		},
-		Handler: handler,
+		Routes: rest.Routes(svc),
 	})
 	if err := srv.ListenAndServe(); err != nil {
 		log.Fatal(err)

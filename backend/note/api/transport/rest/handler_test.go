@@ -1,4 +1,4 @@
-package rest_test
+package rest
 
 import (
 	"context"
@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"noteapp/note"
-	"noteapp/note/api/transport/rest"
 	"noteapp/note/service"
 	"noteapp/note/store/memory"
 	"noteapp/pkg/ptrconv"
@@ -47,7 +46,7 @@ type HandlerTestSuite struct {
 func (s *HandlerTestSuite) SetupTest() {
 	s.store = memory.New()
 	s.svc = service.New(s.store)
-	s.routes = rest.MakeHandler(s.svc)
+	s.routes = makeHandler(s.svc)
 	s.require = s.Require()
 }
 

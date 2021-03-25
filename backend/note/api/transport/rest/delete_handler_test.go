@@ -1,4 +1,4 @@
-package rest_test
+package rest
 
 import (
 	"context"
@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"noteapp/note"
-	http2 "noteapp/note/api/transport/rest"
 	"noteapp/note/util/copyutil"
 )
 
@@ -45,7 +44,7 @@ func (s *HandlerTestSuite) TestDelete() {
 		cancelledCtx, cancel := context.WithCancel(dummyCtx)
 		cancel()
 		responseRecorder := makeRequest(cancelledCtx, newNote.ID)
-		s.assertStatusCode(responseRecorder, http2.StatusClientClosed)
+		s.assertStatusCode(responseRecorder, StatusClientClosed)
 		resp := s.decodeResponse(responseRecorder)
 		s.assertMessage(resp, "Request cancelled")
 	})
