@@ -5,7 +5,8 @@ go 1.16
 require (
 	github.com/go-kit/kit v0.10.0
 	github.com/google/uuid v1.2.0
-	github.com/gorilla/mux v1.8.0 // indirect
+	github.com/gorilla/handlers v1.5.1
+	github.com/gorilla/mux v1.8.0
 	github.com/jinzhu/copier v0.2.8
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.7.0
