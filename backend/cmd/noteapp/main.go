@@ -19,8 +19,11 @@ func main() {
 		Middlewares: []mux.MiddlewareFunc{
 			middleware.Logging,
 		},
-		Routes: rest.Routes(svc),
+		HTTPRoutes: rest.Routes(svc),
 	})
+
+	defer srv.Close()
+
 	if err := srv.ListenAndServe(); err != nil {
 		log.Fatal(err)
 	}

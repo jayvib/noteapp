@@ -13,9 +13,8 @@ func New(conf *Config) *Server {
 	server := &Server{
 		Port:        conf.Port,
 		Middlewares: conf.Middlewares,
-		Routes:      conf.Routes,
+		HTTPRoutes:  conf.HTTPRoutes,
 	}
-	server.init()
 	return server
 }
 
@@ -26,8 +25,8 @@ type Config struct {
 	// Middlewares are the middlewares to be apply to the
 	// handler.
 	Middlewares []mux.MiddlewareFunc
-	// Routes are the API routes that will be register to the server.
-	Routes []Route
+	// HTTPRoutes are the API routes that will be register to the server.
+	HTTPRoutes []Route
 }
 
 // Server is the wrapper for all the bootstrapping of a typical server.
@@ -35,13 +34,14 @@ type Server struct {
 	Port        int
 	Middlewares []mux.MiddlewareFunc
 	server      *http.Server
-	Routes      []Route
+	HTTPRoutes  []Route
+	isInited    bool
 }
 
 func (s *Server) init() {
 	router := mux.NewRouter()
 
-	for _, routes := range s.Routes {
+	for _, routes := range s.HTTPRoutes {
 		logrus.Infof("Registering: %s\t%s\n", routes.Method(), routes.Path())
 		router.Path(routes.Path()).Methods(routes.Method()).Handler(routes.Handler())
 	}
@@ -52,10 +52,22 @@ func (s *Server) init() {
 		Addr:    fmt.Sprintf(":%d", s.Port),
 		Handler: router,
 	}
+
+	s.isInited = true
 }
 
 // ListenAndServe serves clients request by the server.
 func (s *Server) ListenAndServe() error {
-	logrus.Info("Running in port:", s.Port)
+	if !s.isInited {
+		s.init()
+	}
+
+	logrus.Infof("API listen on %s\n", s.server.Addr)
 	return s.server.ListenAndServe()
+}
+
+func (s *Server) Close() {
+	if err := s.server.Close(); err != nil {
+		logrus.Error(err)
+	}
 }
