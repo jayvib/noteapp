@@ -16,6 +16,7 @@ import (
 )
 
 func Test(t *testing.T) {
+	t.SkipNow()
 	suite.Run(t, new(FileStoreTestSuite))
 }
 
