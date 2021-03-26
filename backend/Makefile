@@ -1,6 +1,15 @@
 APP_NAME:=noteapp
 VERSION:=0.0.0
 
+define LOCAL_SERVER_HELP_INFO
+# Use to run noteapp server in local machine.
+#
+# Example:
+# 	make local-server
+endef
+local-server: build-noteapp
+	./bin/${APP_NAME}.linux
+
 define BUILD_NOTEAPP_HELP_INFO
 # Use to build the executable file of noteapp.
 # The executable will store in backend/bin/
