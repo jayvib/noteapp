@@ -3,10 +3,12 @@ package protoutil
 import (
 	"encoding/binary"
 	"fmt"
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 	"io"
 )
 
+// WriteProtoMessage marshals the m protocol buffer then writes to
+// w writer. It prepend a 4-byte size prior to protobuf binary.
 func WriteProtoMessage(w io.Writer, m proto.Message) error {
 	msg, err := proto.Marshal(m)
 	if err != nil {

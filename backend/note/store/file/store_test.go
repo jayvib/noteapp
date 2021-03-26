@@ -2,10 +2,10 @@ package file_test
 
 import (
 	_ "embed"
-	"github.com/golang/protobuf/proto"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"google.golang.org/protobuf/proto"
 	"io/ioutil"
 	"log"
 	pb "noteapp/note/proto"

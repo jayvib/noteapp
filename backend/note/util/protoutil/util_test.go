@@ -3,10 +3,10 @@ package protoutil
 import (
 	"bytes"
 	"encoding/binary"
-	"github.com/golang/protobuf/proto"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/proto"
 	"io"
 	pb "noteapp/note/proto"
 	"testing"
@@ -50,5 +50,7 @@ func getMessage(t *testing.T, buff *bytes.Buffer) (int, *pb.Note) {
 	require.NoError(t, err)
 	var got pb.Note
 	err = proto.Unmarshal(msg, &got)
+	require.NoError(t, err)
+
 	return gotSize, &got
 }
