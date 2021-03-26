@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/gorilla/mux"
 	"log"
+	"noteapp/api"
 	"noteapp/api/middleware"
 	"noteapp/api/server"
 	"noteapp/note/api/v1/transport/rest"
@@ -16,8 +16,8 @@ func main() {
 	svc := noteservice.New(memory.New())
 	srv := server.New(&server.Config{
 		Port: port,
-		Middlewares: []mux.MiddlewareFunc{
-			middleware.Logging,
+		Middlewares: []api.NamedMiddleware{
+			middleware.NewLoggingMiddleware(),
 		},
 		HTTPRoutes: rest.Routes(svc),
 	})

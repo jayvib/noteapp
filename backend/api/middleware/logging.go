@@ -3,8 +3,13 @@ package middleware
 import (
 	"github.com/gorilla/handlers"
 	"net/http"
+	"noteapp/api"
 	"os"
 )
+
+func NewLoggingMiddleware() api.NamedMiddleware {
+	return api.NewNamedMiddleware("Logging", Logging)
+}
 
 // Logging is an http handler middleware which responsible
 // for logging the request details.

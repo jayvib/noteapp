@@ -63,10 +63,10 @@ func getRoutes(svc note.Service) []api.Route {
 	)
 
 	routes := []api.Route{
-		&Route{getHandler, http.MethodGet, "/note/{id}"},
-		&Route{createHandler, http.MethodPost, "/note"},
-		&Route{updateHandler, http.MethodPut, "/note"},
-		&Route{deleteHandler, http.MethodDelete, "/note/{id}"},
+		&Route{getHandler, http.MethodGet, "/v1/note/{id}"},
+		&Route{createHandler, http.MethodPost, "/v1/note"},
+		&Route{updateHandler, http.MethodPut, "/v1/note"},
+		&Route{deleteHandler, http.MethodDelete, "/v1/note/{id}"},
 	}
 	return routes
 }

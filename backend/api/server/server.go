@@ -6,6 +6,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"net/http"
 	"noteapp/api"
+	"os"
+	"text/tabwriter"
 )
 
 // New takes config for all the arguments that the server needs and
@@ -25,7 +27,7 @@ type Config struct {
 	Port int
 	// Middlewares are the middlewares to be apply to the
 	// handler.
-	Middlewares []mux.MiddlewareFunc
+	Middlewares []api.NamedMiddleware
 	// HTTPRoutes are the API routes that will be register to the server.
 	HTTPRoutes []api.Route
 }
@@ -33,7 +35,7 @@ type Config struct {
 // Server is the wrapper for all the bootstrapping of a typical server.
 type Server struct {
 	Port        int
-	Middlewares []mux.MiddlewareFunc
+	Middlewares []api.NamedMiddleware
 	server      *http.Server
 	HTTPRoutes  []api.Route
 	isInited    bool
@@ -42,12 +44,15 @@ type Server struct {
 func (s *Server) init() {
 	router := mux.NewRouter()
 
+	s.printInfo()
+
 	for _, routes := range s.HTTPRoutes {
-		logrus.Infof("Registering: %s\t%s\n", routes.Method(), routes.Path())
 		router.Path(routes.Path()).Methods(routes.Method()).Handler(routes.Handler())
 	}
 
-	router.Use(s.Middlewares...)
+	for _, mw := range s.Middlewares {
+		router.Use(mw.Middleware)
+	}
 
 	s.server = &http.Server{
 		Addr:    fmt.Sprintf(":%d", s.Port),
@@ -55,6 +60,26 @@ func (s *Server) init() {
 	}
 
 	s.isInited = true
+}
+
+func (s *Server) printInfo() {
+	w := tabwriter.NewWriter(os.Stdout, 0, 8, 4, ' ', tabwriter.TabIndent)
+	defer func() { _ = w.Flush() }()
+
+	writeToConsole := func(format string, a ...interface{}) {
+		_, _ = fmt.Fprintf(w, format, a...)
+	}
+
+	writeToConsole("==============ROUTES================\n")
+	for _, route := range s.HTTPRoutes {
+		writeToConsole("%s\t%s\n", route.Method(), route.Path())
+	}
+	writeToConsole("\n")
+	writeToConsole("============MIDDLEWARE==============\n")
+	for _, mw := range s.Middlewares {
+		writeToConsole("%s\n", mw.Name)
+	}
+	writeToConsole("\n")
 }
 
 // ListenAndServe serves clients request by the server.
