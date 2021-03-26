@@ -7,6 +7,7 @@ import (
 	"os"
 )
 
+// NewLoggingMiddleware returns a logging middleware with its name.
 func NewLoggingMiddleware() api.NamedMiddleware {
 	return api.NewNamedMiddleware("Logging", Logging)
 }
