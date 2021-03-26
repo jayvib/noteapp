@@ -5,8 +5,6 @@ import (
 	"github.com/google/uuid"
 )
 
-//go:generate mockery --name Service
-
 // Service encapsulates all the business logic of the note
 // service.
 type Service interface {

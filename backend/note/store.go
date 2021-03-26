@@ -5,8 +5,6 @@ import (
 	"github.com/google/uuid"
 )
 
-//go:generate mockery --name Store
-
 // Store is an interface for the storing the data.
 // Specific storage drivers should implement the following
 // methods.

@@ -93,3 +93,23 @@ lint-check-deps:
 	@if [ -z `which golangci-lint` ]; then \
 		echo "[go get] installing golangci-lint"; \
   fi
+
+define MOD_HELP_INFO
+## Use to download the dependencies.
+#
+# Example:
+#		make mod
+endef
+.PHONY: mod
+mod:
+	@go mod download
+
+define GENERATE_HELP_INFO
+# Use to run the go:generate in source code.
+#
+# Example:
+# 	make generate
+endef
+.PHONY: generate
+generate:
+	go generate ./...

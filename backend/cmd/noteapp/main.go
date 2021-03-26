@@ -10,6 +10,10 @@ import (
 	"noteapp/note/store/memory"
 )
 
+// TODO: Add versioning
+// Follow this link as reference:
+// https://blog.carlmjohnson.net/post/2021/how-to-use-go-embed/
+
 const port = 50001
 
 func main() {
