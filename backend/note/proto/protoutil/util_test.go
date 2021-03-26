@@ -22,6 +22,9 @@ func TestWriteProtoMessage(t *testing.T) {
 		Content: "First Note content",
 	}
 
+	want, err := ProtoToNote(noteProto)
+	require.NoError(t, err)
+
 	msgPayload, err := proto.Marshal(noteProto)
 	require.NoError(t, err)
 
@@ -30,11 +33,12 @@ func TestWriteProtoMessage(t *testing.T) {
 	assert.False(t, buff.Len() <= 0, "buffer is empty")
 
 	gotSize, gotNote := getMessage(t, &buff)
-
 	assert.Equal(t, len(msgPayload), gotSize)
-	assert.Equal(t, noteProto.Id, gotNote.Id)
-	assert.Equal(t, noteProto.Title, gotNote.Title)
-	assert.Equal(t, noteProto.Content, gotNote.Content)
+
+	got, err := ProtoToNote(gotNote)
+	require.NoError(t, err)
+
+	assert.Equal(t, want, got)
 }
 
 func getMessage(t *testing.T, buff *bytes.Buffer) (int, *pb.Note) {

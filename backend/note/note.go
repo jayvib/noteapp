@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/google/uuid"
+	"noteapp/pkg/ptrconv"
 	"time"
 )
 
@@ -32,4 +33,65 @@ type Note struct {
 	UpdatedTime *time.Time `json:"updated_time,omitempty"`
 	// IsFavorite is a flag when then the note is marked as favorite
 	IsFavorite *bool `json:"is_favorite,omitempty"`
+}
+
+// SetID sets the id of the note.
+func (n *Note) SetID(id uuid.UUID) *Note {
+	n.ID = id
+	return n
+}
+
+// SetTitle sets the title of the note.
+func (n *Note) SetTitle(title string) *Note {
+	n.Title = ptrconv.StringPointer(title)
+	return n
+}
+
+// SetContent sets the content of the note.
+func (n *Note) SetContent(content string) *Note {
+	n.Content = ptrconv.StringPointer(content)
+	return n
+}
+
+// SetCreatedTime sets the created time of the note.
+func (n *Note) SetCreatedTime(t time.Time) *Note {
+	n.CreatedTime = ptrconv.TimePointer(t)
+	return n
+}
+
+// SetUpdatedTime sets the update time of the note.
+func (n *Note) SetUpdatedTime(t time.Time) *Note {
+	n.UpdatedTime = ptrconv.TimePointer(t)
+	return n
+}
+
+// SetIsFavorite sets the is-favorite value for the note.
+func (n *Note) SetIsFavorite(b bool) *Note {
+	n.IsFavorite = ptrconv.BoolPointer(b)
+	return n
+}
+
+// GetTitle gets the string value title of the note.
+func (n *Note) GetTitle() string {
+	return ptrconv.StringValue(n.Title)
+}
+
+// GetContent gets the string value content of the note.
+func (n *Note) GetContent() string {
+	return ptrconv.StringValue(n.Content)
+}
+
+// GetCreatedTime gets the created time value of the note.
+func (n *Note) GetCreatedTime() time.Time {
+	return ptrconv.TimeValue(n.CreatedTime)
+}
+
+// GetUpdatedTime gets the updated time value of the note.
+func (n *Note) GetUpdatedTime() time.Time {
+	return ptrconv.TimeValue(n.UpdatedTime)
+}
+
+// GetIsFavorite gets the is-favorite boolean value of the note.
+func (n *Note) GetIsFavorite() bool {
+	return ptrconv.BoolValue(n.IsFavorite)
 }

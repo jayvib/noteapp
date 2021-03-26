@@ -3,8 +3,11 @@ package protoutil
 import (
 	"encoding/binary"
 	"fmt"
+	"github.com/google/uuid"
 	"google.golang.org/protobuf/proto"
 	"io"
+	"noteapp/note"
+	pb "noteapp/note/proto"
 )
 
 // WriteProtoMessage marshals the m protocol buffer then writes to
@@ -42,4 +45,22 @@ func WriteProtoMessage(w io.Writer, m proto.Message) error {
 	}
 
 	return nil
+}
+
+// ProtoToNote converts the note protocol buffer message
+// to note.Note. If there's any error, it will be related
+// to UUID byte parsing.
+func ProtoToNote(p *pb.Note) (*note.Note, error) {
+	id, err := uuid.ParseBytes(p.Id)
+	if err != nil {
+		return nil, err
+	}
+	n := new(note.Note)
+	n.SetID(id).
+		SetTitle(p.Title).
+		SetContent(p.Content).
+		SetCreatedTime(p.CreatedTime.AsTime()).
+		SetUpdatedTime(p.UpdatedTime.AsTime()).
+		SetIsFavorite(p.IsFavorite)
+	return n, nil
 }

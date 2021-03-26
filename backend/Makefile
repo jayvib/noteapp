@@ -61,7 +61,7 @@ define UNIT_TESTS_HELP_INFO
 # 	make unit-test
 endef
 .PHONY: unit-test
-unit-test:
+unit-test: lint
 	@echo "Running unit tests"
 	go test -short ./... -tags=unit-tests -race | grep -v '^?'
 
