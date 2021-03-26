@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"io"
 	"noteapp/note"
 	pb "noteapp/note/proto"
@@ -63,4 +64,16 @@ func ProtoToNote(p *pb.Note) (*note.Note, error) {
 		SetUpdatedTime(p.UpdatedTime.AsTime()).
 		SetIsFavorite(p.IsFavorite)
 	return n, nil
+}
+
+// NoteToProto converts the note to protocol buffer message.
+func NoteToProto(n *note.Note) *pb.Note {
+	return &pb.Note{
+		Id:          []byte(n.ID.String()),
+		Title:       n.GetTitle(),
+		Content:     n.GetContent(),
+		CreatedTime: timestamppb.New(n.GetCreatedTime()),
+		UpdatedTime: timestamppb.New(n.GetUpdatedTime()),
+		IsFavorite:  n.GetIsFavorite(),
+	}
 }
