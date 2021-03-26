@@ -3,7 +3,7 @@ package rest
 import (
 	httptransport "github.com/go-kit/kit/transport/http"
 	"net/http"
-	"noteapp/api/server"
+	"noteapp/api"
 	"noteapp/note"
 )
 
@@ -32,11 +32,11 @@ func (r Route) Path() string {
 
 // Routes returns all the routes that is part of the
 // note API service.
-func Routes(svc note.Service) []server.Route {
+func Routes(svc note.Service) []api.Route {
 	return getRoutes(svc)
 }
 
-func getRoutes(svc note.Service) []server.Route {
+func getRoutes(svc note.Service) []api.Route {
 
 	getHandler := httptransport.NewServer(
 		makeGetEndpoint(svc),
@@ -62,7 +62,7 @@ func getRoutes(svc note.Service) []server.Route {
 		encodeResponse,
 	)
 
-	routes := []server.Route{
+	routes := []api.Route{
 		&Route{getHandler, http.MethodGet, "/note/{id}"},
 		&Route{createHandler, http.MethodPost, "/note"},
 		&Route{updateHandler, http.MethodPut, "/note"},

@@ -5,6 +5,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"net/http"
+	"noteapp/api"
 )
 
 // New takes config for all the arguments that the server needs and
@@ -26,7 +27,7 @@ type Config struct {
 	// handler.
 	Middlewares []mux.MiddlewareFunc
 	// HTTPRoutes are the API routes that will be register to the server.
-	HTTPRoutes []Route
+	HTTPRoutes []api.Route
 }
 
 // Server is the wrapper for all the bootstrapping of a typical server.
@@ -34,7 +35,7 @@ type Server struct {
 	Port        int
 	Middlewares []mux.MiddlewareFunc
 	server      *http.Server
-	HTTPRoutes  []Route
+	HTTPRoutes  []api.Route
 	isInited    bool
 }
 
@@ -66,6 +67,7 @@ func (s *Server) ListenAndServe() error {
 	return s.server.ListenAndServe()
 }
 
+// Close closes the underlying server.
 func (s *Server) Close() {
 	if err := s.server.Close(); err != nil {
 		logrus.Error(err)

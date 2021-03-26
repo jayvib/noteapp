@@ -3,9 +3,9 @@ package main
 import (
 	"github.com/gorilla/mux"
 	"log"
+	"noteapp/api/middleware"
 	"noteapp/api/server"
-	"noteapp/note/api/middleware"
-	"noteapp/note/api/transport/rest"
+	"noteapp/note/api/v1/transport/rest"
 	noteservice "noteapp/note/service"
 	"noteapp/note/store/memory"
 )
