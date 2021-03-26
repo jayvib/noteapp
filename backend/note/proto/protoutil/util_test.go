@@ -14,21 +14,22 @@ import (
 
 // https://stackoverflow.com/questions/59163455/sequentially-write-protobuf-messages-to-a-file-in-go
 
+var dummyNote = &pb.Note{
+	Id:      []byte(uuid.New().String()),
+	Title:   "First Note",
+	Content: "First Note content",
+}
+
 func TestWriteProtoMessage(t *testing.T) {
 	var buff bytes.Buffer
-	noteProto := &pb.Note{
-		Id:      []byte(uuid.New().String()),
-		Title:   "First Note",
-		Content: "First Note content",
-	}
 
-	want, err := ProtoToNote(noteProto)
+	want, err := ProtoToNote(dummyNote)
 	require.NoError(t, err)
 
-	msgPayload, err := proto.Marshal(noteProto)
+	msgPayload, err := proto.Marshal(dummyNote)
 	require.NoError(t, err)
 
-	err = WriteProtoMessage(&buff, noteProto)
+	err = WriteProtoMessage(&buff, dummyNote)
 	require.NoError(t, err)
 	assert.False(t, buff.Len() <= 0, "buffer is empty")
 
@@ -37,6 +38,23 @@ func TestWriteProtoMessage(t *testing.T) {
 
 	got, err := ProtoToNote(gotNote)
 	require.NoError(t, err)
+
+	assert.Equal(t, want, got)
+}
+
+func TestReadProtoMessage(t *testing.T) {
+
+	// Write the note into a protobuf binary
+	// in a buffer.
+	var buff bytes.Buffer
+	err := WriteProtoMessage(&buff, dummyNote)
+	require.NoError(t, err)
+
+	// Read the content
+	got, err := ReadProtoMessage(&buff)
+	require.NoError(t, err)
+
+	want, _ := ProtoToNote(dummyNote)
 
 	assert.Equal(t, want, got)
 }

@@ -48,6 +48,34 @@ func WriteProtoMessage(w io.Writer, m proto.Message) error {
 	return nil
 }
 
+// ReadProtoMessage reads protobuf encoded content from r.
+// It un-marshals the content into a note protobuf message then
+// returns the note. If there's an error it could be an io.EOF error.
+func ReadProtoMessage(r io.Reader) (*note.Note, error) {
+	msgLen := make([]byte, 4)
+	_, err := io.ReadFull(r, msgLen)
+	if err != nil {
+		return nil, err
+	}
+
+	size := binary.LittleEndian.Uint32(msgLen)
+	gotSize := int(size)
+
+	msg := make([]byte, gotSize)
+	_, err = io.ReadFull(r, msg)
+	if err != nil {
+		return nil, err
+	}
+
+	var got pb.Note
+	err = proto.Unmarshal(msg, &got)
+	if err != nil {
+		return nil, err
+	}
+
+	return ProtoToNote(&got)
+}
+
 // ProtoToNote converts the note protocol buffer message
 // to note.Note. If there's any error, it will be related
 // to UUID byte parsing.
