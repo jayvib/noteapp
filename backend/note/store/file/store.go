@@ -94,12 +94,6 @@ func (s *Store) Insert(ctx context.Context, n *note.Note) error {
 			return
 		}
 
-		err = s.file.Sync()
-		if err != nil {
-			errChan <- err
-			return
-		}
-
 		doneChan <- struct{}{}
 	}()
 
@@ -120,7 +114,16 @@ func (s *Store) writeNotesToFile() error {
 			),
 		)...,
 	)
-	return err
+	if err != nil {
+		return err
+	}
+
+	err = s.file.Sync()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func convertMapValueToSlice(notes map[uuid.UUID]*note.Note) []*note.Note {
@@ -152,6 +155,7 @@ func (s *Store) Update(ctx context.Context, n *note.Note) (updated *note.Note, e
 		select {
 		case <-ctx.Done():
 			errChan <- ctx.Err()
+			return
 		default:
 		}
 
@@ -172,6 +176,8 @@ func (s *Store) Update(ctx context.Context, n *note.Note) (updated *note.Note, e
 
 		// Workaround 💪😅
 		existingNote.UpdatedTime = n.UpdatedTime
+
+		s.notes[n.ID] = existingNote
 
 		err = s.writeNotesToFile()
 		if err != nil {
