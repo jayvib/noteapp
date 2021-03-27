@@ -6,7 +6,7 @@ import (
 	"github.com/jinzhu/copier"
 	"github.com/sirupsen/logrus"
 	"noteapp/note"
-	"noteapp/note/util/copyutil"
+	"noteapp/note/noteutil/copyutil"
 	"sync"
 )
 

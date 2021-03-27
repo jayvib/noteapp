@@ -5,7 +5,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
 	"noteapp/note"
-	"noteapp/note/util/copyutil"
+	"noteapp/note/noteutil/copyutil"
 	"noteapp/pkg/ptrconv"
 	"noteapp/pkg/timestamp"
 	"time"

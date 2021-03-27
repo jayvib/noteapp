@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"noteapp/note"
-	"noteapp/note/util/copyutil"
+	"noteapp/note/noteutil/copyutil"
 )
 
 func (s *HandlerTestSuite) TestCreate() {

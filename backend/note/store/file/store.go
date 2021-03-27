@@ -7,8 +7,8 @@ import (
 	"io"
 	"io/fs"
 	"noteapp/note"
+	"noteapp/note/noteutil/copyutil"
 	"noteapp/note/proto/protoutil"
-	"noteapp/note/util/copyutil"
 	"sync"
 )
 

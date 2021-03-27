@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"noteapp/note"
 	"noteapp/note/mocks"
-	"noteapp/note/util/copyutil"
+	"noteapp/note/noteutil/copyutil"
 	"noteapp/pkg/ptrconv"
 	"noteapp/pkg/timestamp"
 	"noteapp/pkg/util/errorutil"

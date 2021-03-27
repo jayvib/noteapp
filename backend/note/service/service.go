@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"noteapp/note"
-	"noteapp/note/util/copyutil"
+	"noteapp/note/noteutil/copyutil"
 	"noteapp/pkg/timestamp"
 )
 

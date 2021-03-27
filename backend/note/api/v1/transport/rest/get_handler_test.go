@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"noteapp/note"
-	"noteapp/note/util/copyutil"
+	"noteapp/note/noteutil/copyutil"
 	"noteapp/pkg/timestamp"
 )
 
