@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 	"io"
+	"noteapp/note"
 	pb "noteapp/note/proto"
 	"testing"
 )
@@ -21,25 +22,59 @@ var dummyNote = &pb.Note{
 }
 
 func TestWriteProtoMessage(t *testing.T) {
-	var buff bytes.Buffer
 
-	want, err := ProtoToNote(dummyNote)
-	require.NoError(t, err)
+	t.Run("Single Message", func(t *testing.T) {
+		var buff bytes.Buffer
 
-	msgPayload, err := proto.Marshal(dummyNote)
-	require.NoError(t, err)
+		want, err := ProtoToNote(dummyNote)
+		require.NoError(t, err)
 
-	err = WriteProtoMessage(&buff, dummyNote)
-	require.NoError(t, err)
-	assert.False(t, buff.Len() <= 0, "buffer is empty")
+		msgPayload, err := proto.Marshal(dummyNote)
+		require.NoError(t, err)
 
-	gotSize, gotNote := getMessage(t, &buff)
-	assert.Equal(t, len(msgPayload), gotSize)
+		err = WriteProtoMessage(&buff, dummyNote)
+		require.NoError(t, err)
+		assert.False(t, buff.Len() <= 0, "buffer is empty")
 
-	got, err := ProtoToNote(gotNote)
-	require.NoError(t, err)
+		gotSize, gotNote := getMessage(t, &buff)
+		assert.Equal(t, len(msgPayload), gotSize)
 
-	assert.Equal(t, want, got)
+		got, err := ProtoToNote(gotNote)
+		require.NoError(t, err)
+
+		assert.Equal(t, want, got)
+	})
+
+	t.Run("Multiple message", func(t *testing.T) {
+		note1 := &note.Note{}
+		note1.SetID(uuid.New()).
+			SetTitle("First Note").
+			SetContent("First note content").
+			SetIsFavorite(true)
+
+		note2 := &note.Note{}
+		note2.SetID(uuid.New()).
+			SetTitle("Second Note").
+			SetContent("Second note content").
+			SetIsFavorite(false)
+
+		var buff bytes.Buffer
+
+		noteProtos := []proto.Message{
+			NoteToProto(note1),
+			NoteToProto(note2),
+		}
+
+		err := WriteAllProtoMessages(&buff, noteProtos...)
+		require.NoError(t, err)
+
+		got, err := ReadAllProtoMessages(&buff)
+		require.NoError(t, err)
+
+		want := []*note.Note{note1, note2}
+		assert.Equal(t, want, got)
+	})
+
 }
 
 func TestReadProtoMessage(t *testing.T) {

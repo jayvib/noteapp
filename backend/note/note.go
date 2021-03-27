@@ -55,13 +55,17 @@ func (n *Note) SetContent(content string) *Note {
 
 // SetCreatedTime sets the created time of the note.
 func (n *Note) SetCreatedTime(t time.Time) *Note {
-	n.CreatedTime = ptrconv.TimePointer(t)
+	if !t.IsZero() {
+		n.CreatedTime = ptrconv.TimePointer(t)
+	}
 	return n
 }
 
 // SetUpdatedTime sets the update time of the note.
 func (n *Note) SetUpdatedTime(t time.Time) *Note {
-	n.UpdatedTime = ptrconv.TimePointer(t)
+	if !t.IsZero() {
+		n.UpdatedTime = ptrconv.TimePointer(t)
+	}
 	return n
 }
 

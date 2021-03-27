@@ -2,7 +2,7 @@ package protoutil
 
 import (
 	"encoding/binary"
-	"fmt"
+	"errors"
 	"github.com/google/uuid"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -11,15 +11,18 @@ import (
 	pb "noteapp/note/proto"
 )
 
+var errUnexpected = errors.New("unexpected write count")
+
 // WriteProtoMessage marshals the m protocol buffer then writes to
 // w writer. It prepend a 4-byte size prior to protobuf binary.
-func WriteProtoMessage(w io.Writer, m proto.Message) error {
-	msg, err := proto.Marshal(m)
+func WriteProtoMessage(w io.Writer, message proto.Message) error {
+
+	msgBytes, err := proto.Marshal(message)
 	if err != nil {
 		return err
 	}
 
-	msgLen := len(msg)
+	msgLen := len(msgBytes)
 
 	// Create a 4-byte binary that contains
 	// the length of the message. Use little endian.
@@ -32,19 +35,31 @@ func WriteProtoMessage(w io.Writer, m proto.Message) error {
 	}
 
 	if n != 4 {
-		return fmt.Errorf("unexpected write count")
+		return errUnexpected
 	}
 
 	// Write to protocol buffer binary
-	n, err = w.Write(msg)
+	n, err = w.Write(msgBytes)
 	if err != nil {
 		return err
 	}
 
 	if n != msgLen {
-		return fmt.Errorf("unexpected write count")
+		return errUnexpected
 	}
 
+	return nil
+}
+
+// WriteAllProtoMessages is like a WriteProtoMessage but it takes an arbitrary
+// messages to write to w writer.
+func WriteAllProtoMessages(w io.Writer, messages ...proto.Message) error {
+	for _, message := range messages {
+		err := WriteProtoMessage(w, message)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -74,6 +89,25 @@ func ReadProtoMessage(r io.Reader) (*note.Note, error) {
 	}
 
 	return ProtoToNote(&got)
+}
+
+// ReadAllProtoMessages reads all the proto messages from r until
+// the reader return an io.EOF.
+func ReadAllProtoMessages(r io.Reader) ([]*note.Note, error) {
+
+	var notes []*note.Note
+	for {
+		n, err := ReadProtoMessage(r)
+		if err != nil && err == io.EOF {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		notes = append(notes, n)
+	}
+
+	return notes, nil
 }
 
 // ProtoToNote converts the note protocol buffer message

@@ -63,7 +63,7 @@ endef
 .PHONY: unit-test
 unit-test: lint
 	@echo "Running unit tests"
-	go test -short ./... -tags=unit-tests -race | grep -v '^?'
+	@go test -short ./... -tags=unit-tests -race | grep -v '^?'
 
 define LINT_HELP_INFO
 # Use to lint the noteapp source code.
