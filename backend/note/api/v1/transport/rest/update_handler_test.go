@@ -9,17 +9,17 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"noteapp/note"
-	"noteapp/note/noteutil/copyutil"
+	"noteapp/note/noteutil"
 	"noteapp/pkg/ptrconv"
 	"noteapp/pkg/timestamp"
 )
 
 func (s *HandlerTestSuite) TestUpdate() {
 
-	newNote := copyutil.Shallow(dummyNote)
+	newNote := noteutil.Copy(dummyNote)
 
 	setup := func() *note.Note {
-		newNote, err := s.svc.Create(dummyCtx, copyutil.Shallow(newNote))
+		newNote, err := s.svc.Create(dummyCtx, noteutil.Copy(newNote))
 		s.require.NoError(err)
 		s.require.NotNil(newNote)
 		s.require.NotEqual(uuid.Nil, newNote.ID)
@@ -44,10 +44,10 @@ func (s *HandlerTestSuite) TestUpdate() {
 	s.Run("Request for update successfully", func() {
 
 		// Update the note via request
-		updatedNote := copyutil.Shallow(setup())
+		updatedNote := noteutil.Copy(setup())
 		updatedNote.Title = ptrconv.StringPointer("Updated Title")
 
-		want := copyutil.Shallow(updatedNote)
+		want := noteutil.Copy(updatedNote)
 		want.UpdatedTime = timestamp.GenerateTimestamp()
 
 		responseRecorder := makeRequest(dummyCtx, updatedNote)
@@ -57,7 +57,7 @@ func (s *HandlerTestSuite) TestUpdate() {
 	})
 
 	s.Run("Request for update note that is not exist should return an error", func() {
-		updatedNote := copyutil.Shallow(dummyNote)
+		updatedNote := noteutil.Copy(dummyNote)
 		updatedNote.ID = uuid.New()
 		responseRecorder := makeRequest(dummyCtx, updatedNote)
 		s.assertStatusCode(responseRecorder, http.StatusNotFound)
@@ -67,7 +67,7 @@ func (s *HandlerTestSuite) TestUpdate() {
 
 	s.Run("Cancelled request should return an error", func() {
 		logrus.SetLevel(logrus.DebugLevel)
-		updatedNote := copyutil.Shallow(setup())
+		updatedNote := noteutil.Copy(setup())
 		updatedNote.Title = ptrconv.StringPointer("Updated Title")
 
 		cancelledCtx, cancel := context.WithCancel(dummyCtx)

@@ -6,13 +6,13 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"noteapp/note"
-	"noteapp/note/noteutil/copyutil"
+	"noteapp/note/noteutil"
 )
 
 func (s *HandlerTestSuite) TestDelete() {
 
 	setup := func() *note.Note {
-		newNote, err := s.svc.Create(dummyCtx, copyutil.Shallow(dummyNote))
+		newNote, err := s.svc.Create(dummyCtx, noteutil.Copy(dummyNote))
 		s.require.NoError(err)
 		return newNote
 	}

@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"noteapp/note"
-	"noteapp/note/noteutil/copyutil"
+	"noteapp/note/noteutil"
 	"noteapp/pkg/timestamp"
 )
 
@@ -21,7 +21,7 @@ func (s *HandlerTestSuite) TestGet() {
 	}
 
 	setupNewNote := func() *note.Note {
-		testNote := copyutil.Shallow(dummyNote)
+		testNote := noteutil.Copy(dummyNote)
 		newNote, err := s.svc.Create(dummyCtx, testNote)
 		s.require.NoError(err)
 		return newNote

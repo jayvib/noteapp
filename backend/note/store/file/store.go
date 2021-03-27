@@ -3,11 +3,10 @@ package file
 import (
 	"context"
 	"github.com/google/uuid"
-	"github.com/jinzhu/copier"
 	"io"
 	"io/fs"
 	"noteapp/note"
-	"noteapp/note/noteutil/copyutil"
+	"noteapp/note/noteutil"
 	"noteapp/note/proto/protoutil"
 	"sync"
 )
@@ -86,7 +85,7 @@ func (s *Store) Insert(ctx context.Context, n *note.Note) error {
 			return
 		}
 
-		s.notes[n.ID] = copyutil.Shallow(n)
+		s.notes[n.ID] = noteutil.Copy(n)
 
 		err := s.writeNotesToFile()
 		if err != nil {
@@ -168,7 +167,7 @@ func (s *Store) Update(ctx context.Context, n *note.Note) (updated *note.Note, e
 			return
 		}
 
-		err = copier.CopyWithOption(existingNote, n, copier.Option{IgnoreEmpty: true, DeepCopy: true})
+		err := noteutil.Merge(existingNote, n)
 		if err != nil {
 			errChan <- err
 			return
@@ -185,7 +184,7 @@ func (s *Store) Update(ctx context.Context, n *note.Note) (updated *note.Note, e
 			return
 		}
 
-		noteChan <- copyutil.Shallow(existingNote)
+		noteChan <- noteutil.Copy(existingNote)
 	}()
 
 	select {

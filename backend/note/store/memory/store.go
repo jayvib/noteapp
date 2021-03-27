@@ -3,10 +3,9 @@ package memory
 import (
 	"context"
 	"github.com/google/uuid"
-	"github.com/jinzhu/copier"
 	"github.com/sirupsen/logrus"
 	"noteapp/note"
-	"noteapp/note/noteutil/copyutil"
+	"noteapp/note/noteutil"
 	"sync"
 )
 
@@ -59,7 +58,7 @@ func (s *Store) Insert(ctx context.Context, n *note.Note) error {
 			return
 		}
 
-		cpyNote := copyutil.Shallow(n)
+		cpyNote := noteutil.Copy(n)
 		s.data[n.ID] = cpyNote
 		doneChan <- struct{}{}
 	}()
@@ -108,18 +107,17 @@ func (s *Store) Update(ctx context.Context, n *note.Note) (*note.Note, error) {
 		// I think there's a bug with copier
 		// because the UpdateTime is not copied
 		// to the toValue
-		err := copier.CopyWithOption(exist, n, copier.Option{IgnoreEmpty: true, DeepCopy: true})
+		err := noteutil.Merge(exist, n)
 		if err != nil {
 			errChan <- err
 			return
 		}
 
-		logrus.Debug(exist.UpdatedTime, n.UpdatedTime)
 		// Workaround 💪😅
 		exist.UpdatedTime = n.UpdatedTime
 
 		logrus.Debug(exist.UpdatedTime)
-		noteChan <- copyutil.Shallow(exist)
+		noteChan <- noteutil.Copy(exist)
 	}()
 
 	select {

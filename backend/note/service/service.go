@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"noteapp/note"
-	"noteapp/note/noteutil/copyutil"
+	"noteapp/note/noteutil"
 	"noteapp/pkg/timestamp"
 )
 
@@ -49,14 +49,14 @@ func (s *Service) Create(ctx context.Context, n *note.Note) (*note.Note, error) 
 		return nil, err
 	}
 
-	return copyutil.Shallow(n), nil
+	return noteutil.Copy(n), nil
 }
 
 // Update updates an existing note. It takes ctx to let the
 // caller stop the execution
 func (s *Service) Update(ctx context.Context, n *note.Note) (*note.Note, error) {
 
-	cpyNote := copyutil.Shallow(n)
+	cpyNote := noteutil.Copy(n)
 
 	if cpyNote.ID == uuid.Nil {
 		return nil, note.ErrNilID

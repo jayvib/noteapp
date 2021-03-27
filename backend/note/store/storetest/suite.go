@@ -5,7 +5,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
 	"noteapp/note"
-	"noteapp/note/noteutil/copyutil"
+	"noteapp/note/noteutil"
 	"noteapp/pkg/ptrconv"
 	"noteapp/pkg/timestamp"
 	"time"
@@ -57,7 +57,7 @@ func (s *TestSuite) TestInsert() {
 
 	s.Run("Calling context cancel while inserting new product should return an context.Cancelled error", func() {
 		ctx, cancel := context.WithCancel(dummyCtx)
-		cpyNote := copyutil.Shallow(dummyNote)
+		cpyNote := noteutil.Copy(dummyNote)
 		cpyNote.ID = uuid.New()
 		cancel()
 		err := s.store.Insert(ctx, cpyNote)
@@ -71,7 +71,7 @@ func (s *TestSuite) TestInsert() {
 func (s *TestSuite) TestGet() {
 	s.Run("Getting an existing note should return the note details", func() {
 		s.Require().NoError(s.store.Insert(dummyCtx, dummyNote))
-		copyNote := copyutil.Shallow(dummyNote)
+		copyNote := noteutil.Copy(dummyNote)
 		got, err := s.store.Get(dummyCtx, copyNote.ID)
 		s.NoError(err)
 		s.NotNil(got)
@@ -172,7 +172,7 @@ func (s *TestSuite) TestDelete() {
 }
 
 func (s *TestSuite) setupFunc() *note.Note {
-	n := copyutil.Shallow(dummyNote)
+	n := noteutil.Copy(dummyNote)
 	n.ID = uuid.New()
 	err := s.store.Insert(dummyCtx, n)
 	s.NoError(err)

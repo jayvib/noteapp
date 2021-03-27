@@ -8,12 +8,12 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"noteapp/note"
-	"noteapp/note/noteutil/copyutil"
+	"noteapp/note/noteutil"
 )
 
 func (s *HandlerTestSuite) TestCreate() {
 
-	newNote := copyutil.Shallow(dummyNote)
+	newNote := noteutil.Copy(dummyNote)
 
 	makeRequest := func(ctx context.Context, n *note.Note) *httptest.ResponseRecorder {
 		responseRecorder := httptest.NewRecorder()
@@ -36,7 +36,7 @@ func (s *HandlerTestSuite) TestCreate() {
 	}
 
 	s.Run("Requesting a create note successfully", func() {
-		want := copyutil.Shallow(newNote)
+		want := noteutil.Copy(newNote)
 		want.ID = uuid.Nil
 
 		responseRecorder := makeRequest(dummyCtx, newNote)
@@ -46,7 +46,7 @@ func (s *HandlerTestSuite) TestCreate() {
 	})
 
 	s.Run("Requesting a create note but the ID is already existing should return an error", func() {
-		inputNote := copyutil.Shallow(newNote)
+		inputNote := noteutil.Copy(newNote)
 		newNote, err := s.svc.Create(dummyCtx, inputNote)
 		s.require.NoError(err)
 
@@ -57,7 +57,7 @@ func (s *HandlerTestSuite) TestCreate() {
 	})
 
 	s.Run("Cancelled request should return an error", func() {
-		inputNote := copyutil.Shallow(newNote)
+		inputNote := noteutil.Copy(newNote)
 		cancelledCtx, cancel := context.WithCancel(dummyCtx)
 		cancel()
 		responseRecorder := makeRequest(cancelledCtx, inputNote)

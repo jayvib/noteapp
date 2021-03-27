@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"noteapp/note"
 	"noteapp/note/mocks"
-	"noteapp/note/noteutil/copyutil"
+	"noteapp/note/noteutil"
 	"noteapp/pkg/ptrconv"
 	"noteapp/pkg/timestamp"
 	"noteapp/pkg/util/errorutil"
@@ -39,7 +39,7 @@ func (s *TestSuite) TestCreate() {
 	)
 
 	getNote := func() *note.Note {
-		cpyNote := copyutil.Shallow(dummyNote)
+		cpyNote := noteutil.Copy(dummyNote)
 		cpyNote.ID = uuid.Nil
 		cpyNote.CreatedTime = nil
 		return cpyNote
@@ -95,10 +95,10 @@ func (s *TestSuite) TestCreate() {
 func (s *TestSuite) TestUpdate() {
 	t := s.T()
 	s.Run("Updating an existing note", func() {
-		want := copyutil.Shallow(dummyNote)
+		want := noteutil.Copy(dummyNote)
 		want.UpdatedTime = timestamp.GenerateTimestamp()
 
-		returnNote := copyutil.Shallow(dummyNote)
+		returnNote := noteutil.Copy(dummyNote)
 		store := new(mocks.Store)
 		store.On("Update", mock.Anything, mock.MatchedBy(matchByID(want.ID))).Return(returnNote, nil).
 			Run(func(args mock.Arguments) {
@@ -117,7 +117,7 @@ func (s *TestSuite) TestUpdate() {
 	})
 
 	s.Run("Updating a non-existing note should return an error", func() {
-		want := copyutil.Shallow(dummyNote)
+		want := noteutil.Copy(dummyNote)
 
 		store := new(mocks.Store)
 		store.On("Get", mock.Anything, mock.MatchedBy(matchByID(want.ID))).Return(nil, note.ErrNotFound)
@@ -131,7 +131,7 @@ func (s *TestSuite) TestUpdate() {
 	})
 
 	s.Run("Updating a note with no ID should return an error", func() {
-		want := copyutil.Shallow(dummyNote)
+		want := noteutil.Copy(dummyNote)
 		want.ID = uuid.Nil
 
 		svc := New(nil)
@@ -141,7 +141,7 @@ func (s *TestSuite) TestUpdate() {
 
 	s.Run("While updating to  store it returns an error", func() {
 
-		cpyNote := copyutil.Shallow(dummyNote)
+		cpyNote := noteutil.Copy(dummyNote)
 
 		store := new(mocks.Store)
 		store.On("Get", mock.Anything, mock.MatchedBy(matchByID(cpyNote.ID))).Return(new(note.Note), nil)
@@ -160,7 +160,7 @@ func (s *TestSuite) TestUpdate() {
 func (s *TestSuite) TestDelete() {
 	t := s.T()
 	s.Run("Deleting a note", func() {
-		cpyNote := copyutil.Shallow(dummyNote)
+		cpyNote := noteutil.Copy(dummyNote)
 		store := new(mocks.Store)
 		store.On("Delete", mock.Anything, mock.MatchedBy(matchByID(cpyNote.ID))).Return(nil)
 
@@ -182,7 +182,7 @@ func (s *TestSuite) TestDelete() {
 func (s *TestSuite) TestGet() {
 	t := s.T()
 	s.Run("Getting an existing note", func() {
-		cpyNote := copyutil.Shallow(dummyNote)
+		cpyNote := noteutil.Copy(dummyNote)
 		store := new(mocks.Store)
 		store.On("Get", mock.Anything, mock.MatchedBy(matchByID(cpyNote.ID))).Return(cpyNote, nil)
 
