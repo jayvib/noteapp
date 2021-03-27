@@ -3,6 +3,7 @@ package file
 import (
 	"context"
 	"github.com/google/uuid"
+	"github.com/jinzhu/copier"
 	"io"
 	"io/fs"
 	"noteapp/note"
@@ -87,14 +88,7 @@ func (s *Store) Insert(ctx context.Context, n *note.Note) error {
 
 		s.notes[n.ID] = copyutil.Shallow(n)
 
-		err := protoutil.WriteAllProtoMessages(
-			s.file,
-			protoutil.ConvertToProtoMessage(
-				protoutil.ConvertNotesToProtos(
-					convertMapValueToSlice(s.notes),
-				),
-			)...,
-		)
+		err := s.writeNotesToFile()
 		if err != nil {
 			errChan <- err
 			return
@@ -117,6 +111,18 @@ func (s *Store) Insert(ctx context.Context, n *note.Note) error {
 	}
 }
 
+func (s *Store) writeNotesToFile() error {
+	err := protoutil.WriteAllProtoMessages(
+		s.file,
+		protoutil.ConvertToProtoMessage(
+			protoutil.ConvertNotesToProtos(
+				convertMapValueToSlice(s.notes),
+			),
+		)...,
+	)
+	return err
+}
+
 func convertMapValueToSlice(notes map[uuid.UUID]*note.Note) []*note.Note {
 
 	var noteSlice []*note.Note
@@ -131,22 +137,138 @@ func convertMapValueToSlice(notes map[uuid.UUID]*note.Note) []*note.Note {
 
 // Update updates an existing n note to the store.
 func (s *Store) Update(ctx context.Context, n *note.Note) (updated *note.Note, err error) {
-	return
+
+	var (
+		errChan  = make(chan error, 1)
+		noteChan = make(chan *note.Note, 1)
+	)
+
+	go func() {
+		defer func() {
+			close(errChan)
+			close(noteChan)
+		}()
+
+		select {
+		case <-ctx.Done():
+			errChan <- ctx.Err()
+		default:
+		}
+
+		s.mu.Lock()
+		defer s.mu.Unlock()
+
+		existingNote, found := s.notes[n.ID]
+		if !found {
+			errChan <- note.ErrNotFound
+			return
+		}
+
+		err = copier.CopyWithOption(existingNote, n, copier.Option{IgnoreEmpty: true, DeepCopy: true})
+		if err != nil {
+			errChan <- err
+			return
+		}
+
+		// Workaround 💪😅
+		existingNote.UpdatedTime = n.UpdatedTime
+
+		err = s.writeNotesToFile()
+		if err != nil {
+			errChan <- err
+			return
+		}
+
+		noteChan <- copyutil.Shallow(existingNote)
+	}()
+
+	select {
+	case err = <-errChan:
+		return nil, err
+	case n := <-noteChan:
+		return n, nil
+	}
+
 }
 
 // Delete deletes an existing note with id from the store.
 func (s *Store) Delete(ctx context.Context, id uuid.UUID) error {
-	return nil
+
+	var (
+		errChan  = make(chan error, 1)
+		doneChan = make(chan struct{}, 1)
+	)
+
+	go func() {
+		defer func() {
+			close(errChan)
+			close(doneChan)
+		}()
+
+		select {
+		case <-ctx.Done():
+			errChan <- ctx.Err()
+			return
+		default:
+		}
+
+		s.mu.Lock()
+		defer s.mu.Unlock()
+
+		delete(s.notes, id)
+
+		err := s.writeNotesToFile()
+		if err != nil {
+			errChan <- err
+			return
+		}
+
+		doneChan <- struct{}{}
+	}()
+
+	select {
+	case err := <-errChan:
+		return err
+	case <-doneChan:
+		return nil
+	}
 }
 
 // Get gets the existing note with id from the store.
 func (s *Store) Get(ctx context.Context, id uuid.UUID) (*note.Note, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	n, found := s.notes[id]
-	if !found {
-		return nil, note.ErrNotFound
-	}
 
-	return n, nil
+	var (
+		errChan  = make(chan error, 1)
+		noteChan = make(chan *note.Note, 1)
+	)
+
+	go func() {
+		defer func() {
+			close(errChan)
+			close(noteChan)
+		}()
+
+		select {
+		case <-ctx.Done():
+			errChan <- ctx.Err()
+		default:
+		}
+
+		s.mu.RLock()
+		defer s.mu.RUnlock()
+		n, found := s.notes[id]
+		if !found {
+			errChan <- note.ErrNotFound
+			return
+		}
+
+		noteChan <- n
+	}()
+
+	select {
+	case err := <-errChan:
+		return nil, err
+	case n := <-noteChan:
+		return n, nil
+	}
 }

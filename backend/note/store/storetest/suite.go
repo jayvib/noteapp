@@ -129,7 +129,7 @@ func (s *TestSuite) TestUpdate() {
 		}
 
 		updated, err := s.store.Update(dummyCtx, noneExistingProd)
-		s.Equal(err, note.ErrNotFound)
+		s.Equal(note.ErrNotFound, err)
 		s.Nil(updated)
 	})
 

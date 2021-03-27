@@ -27,6 +27,6 @@ func (s *FileStoreTestSuite) SetupTest() {
 	s.SetStore(Must(newStore(file)))
 }
 
-func (s *FileStoreTestSuite) TestInsert() {
-	s.TestSuite.TestInsert()
+func (s *FileStoreTestSuite) Test() {
+	s.TestSuite.TestDelete()
 }
