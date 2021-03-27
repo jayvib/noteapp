@@ -6,6 +6,8 @@ import (
 	"io"
 	"io/fs"
 	"noteapp/note"
+	"noteapp/note/proto/protoutil"
+	"noteapp/note/util/copyutil"
 	"sync"
 )
 
@@ -15,15 +17,31 @@ var _ note.Store = (*Store)(nil)
 type File interface {
 	fs.File
 	io.WriteSeeker
+	Sync() error
 }
 
-// New takes a file to do IO operation for the
+// Must must initialize a store with no error otherwise
+// it will panic.
+func Must(store *Store, err error) *Store {
+	if err != nil {
+		panic(err)
+	}
+	return store
+}
+
+// newStore takes a file to do IO operation for the
 // store and returns the store instance.
-func New(file File) *Store {
+func newStore(file File) (*Store, error) {
+
+	// TODO: Read all first the messages from the
+	// existing file.
+
+	// TODO: Set the existing notes to the notes field.
+
 	return &Store{
 		file:  file,
 		notes: make(map[uuid.UUID]*note.Note),
-	}
+	}, nil
 }
 
 // Store implements the note.Store interface.
@@ -39,9 +57,76 @@ type Store struct {
 
 // Insert inserts an n note to the store.
 func (s *Store) Insert(ctx context.Context, n *note.Note) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	return nil
+
+	var (
+		errChan  = make(chan error, 1)
+		doneChan = make(chan struct{}, 1)
+	)
+
+	go func() {
+		defer func() {
+			close(errChan)
+			close(doneChan)
+		}()
+
+		select {
+		case <-ctx.Done():
+			errChan <- ctx.Err()
+			return
+		default:
+		}
+
+		s.mu.Lock()
+		defer s.mu.Unlock()
+
+		_, found := s.notes[n.ID]
+		if found {
+			errChan <- note.ErrExists
+			return
+		}
+
+		s.notes[n.ID] = copyutil.Shallow(n)
+
+		err := protoutil.WriteAllProtoMessages(
+			s.file,
+			protoutil.ConvertToProtoMessage(
+				protoutil.ConvertNotesToProtos(
+					convertMapValueToSlice(s.notes),
+				),
+			)...,
+		)
+		if err != nil {
+			errChan <- err
+			return
+		}
+
+		err = s.file.Sync()
+		if err != nil {
+			errChan <- err
+			return
+		}
+
+		doneChan <- struct{}{}
+	}()
+
+	select {
+	case err := <-errChan:
+		return err
+	case <-doneChan:
+		return nil
+	}
+}
+
+func convertMapValueToSlice(notes map[uuid.UUID]*note.Note) []*note.Note {
+
+	var noteSlice []*note.Note
+
+	for _, n := range notes {
+		noteSlice = append(noteSlice, n)
+	}
+
+	// TODO: Sort the notes
+	return noteSlice
 }
 
 // Update updates an existing n note to the store.
@@ -56,5 +141,12 @@ func (s *Store) Delete(ctx context.Context, id uuid.UUID) error {
 
 // Get gets the existing note with id from the store.
 func (s *Store) Get(ctx context.Context, id uuid.UUID) (*note.Note, error) {
-	return nil, nil
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	n, found := s.notes[id]
+	if !found {
+		return nil, note.ErrNotFound
+	}
+
+	return n, nil
 }

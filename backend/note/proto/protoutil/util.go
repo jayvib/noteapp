@@ -139,3 +139,22 @@ func NoteToProto(n *note.Note) *pb.Note {
 		IsFavorite:  n.GetIsFavorite(),
 	}
 }
+
+// ConvertNotesToProtos convert the array of notes into a
+// note protocol buffer message.
+func ConvertNotesToProtos(notes []*note.Note) (pbs []*pb.Note) {
+	for _, n := range notes {
+		pbs = append(pbs, NoteToProto(n))
+	}
+	return
+}
+
+// ConvertToProtoMessage takes an array of protobuf note message and
+// converts it to proto.Message interface.
+func ConvertToProtoMessage(pbs []*pb.Note) []proto.Message {
+	var messages []proto.Message
+	for _, p := range pbs {
+		messages = append(messages, p)
+	}
+	return messages
+}
