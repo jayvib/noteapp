@@ -2,6 +2,8 @@ package note
 
 import "bytes"
 
+// TODO: Create testing for each sorter.
+
 // SortByIDSorter implements sort.Interface which
 // sort the note by its ID.
 type SortByIDSorter []*Note
@@ -33,5 +35,22 @@ func (n SortByTitleSorter) Less(i, j int) bool {
 
 // Swap swaps the note i, and note j.
 func (n SortByTitleSorter) Swap(i, j int) {
+	n[i], n[j] = n[j], n[i]
+}
+
+// SortByCreatedDateSorter implements sort.Interface which
+// sort the note by created date.
+type SortByCreatedDateSorter []*Note
+
+// Len returns the length of notes.
+func (n SortByCreatedDateSorter) Len() int { return len(n) }
+
+// Less compare the adjacent IDs of the note.
+func (n SortByCreatedDateSorter) Less(i, j int) bool {
+	return n[i].GetCreatedTime().Before(n[j].GetCreatedTime())
+}
+
+// Swap swaps the note i, and note j.
+func (n SortByCreatedDateSorter) Swap(i, j int) {
 	n[i], n[j] = n[j], n[i]
 }

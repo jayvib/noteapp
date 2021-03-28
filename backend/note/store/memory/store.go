@@ -66,7 +66,7 @@ func (s *Store) Fetch(ctx context.Context, p *note.Pagination) (note.Iterator, e
 		case note.SortByTitle:
 			sort.Sort(note.SortByTitleSorter(notes))
 		case note.SortByCreatedTime:
-			// TODO: To be implemented
+			sort.Sort(note.SortByCreatedDateSorter(notes))
 		default:
 			sort.Sort(note.SortByIDSorter(notes))
 		}

@@ -48,6 +48,7 @@ type Store struct {
 // I returns the fetch result containing the current pagination settings, the
 // note data and the number of pages of the current fetch pagination.
 func (s *Store) Fetch(ctx context.Context, p *note.Pagination) (note.Iterator, error) {
+	// TODO: Implement Me.
 	return nil, errors.New("to be implemented")
 }
 

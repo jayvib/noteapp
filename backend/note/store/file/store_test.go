@@ -154,6 +154,10 @@ func (s *FileStoreTestSuite) TestDelete() {
 	})
 }
 
+func (s *FileStoreTestSuite) TestFetch() {
+	s.T().SkipNow()
+}
+
 func (s *FileStoreTestSuite) writeNotesToFile(notes ...*note.Note) {
 	err := protoutil.WriteAllProtoMessages(
 		s.file,
