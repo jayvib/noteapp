@@ -99,3 +99,14 @@ func (n *Note) GetUpdatedTime() time.Time {
 func (n *Note) GetIsFavorite() bool {
 	return ptrconv.BoolValue(n.IsFavorite)
 }
+
+// Notes contains an array of notes to do a array operation.
+type Notes []*Note
+
+func (n *Notes) ForEach(fn func(note *Note) (stop bool)) {
+	for _, _note := range *n {
+		if stop := fn(_note); stop {
+			return
+		}
+	}
+}

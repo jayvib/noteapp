@@ -3,8 +3,8 @@ package file
 import (
 	"context"
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 	"io"
-	"io/fs"
 	"noteapp/note"
 	"noteapp/note/noteutil"
 	"noteapp/note/proto/protoutil"
@@ -13,11 +13,10 @@ import (
 
 var _ note.Store = (*Store)(nil)
 
-// File represents an actual file.
-type File interface {
-	fs.File
-	io.WriteSeeker
-	Sync() error
+// New takes a file to do IO operation for the
+// store and returns the store instance.
+func New(file File) *Store {
+	return newStore(file)
 }
 
 // Must must initialize a store with no error otherwise
@@ -29,19 +28,11 @@ func Must(store *Store, err error) *Store {
 	return store
 }
 
-// newStore takes a file to do IO operation for the
-// store and returns the store instance.
-func newStore(file File) (*Store, error) {
-
-	// TODO: Read all first the messages from the
-	// existing file.
-
-	// TODO: Set the existing notes to the notes field.
-
+func newStore(file File) *Store {
 	return &Store{
 		file:  file,
 		notes: make(map[uuid.UUID]*note.Note),
-	}, nil
+	}
 }
 
 // Store implements the note.Store interface.
@@ -53,10 +44,52 @@ type Store struct {
 
 	mu    sync.RWMutex
 	notes map[uuid.UUID]*note.Note
+
+	// once use to initialize the store only
+	// once.
+	once sync.Once
+}
+
+func (s *Store) lazyInit() (err error) {
+	s.once.Do(func() {
+		_, err = s.file.Seek(0, io.SeekStart)
+		if err != nil {
+			return
+		}
+
+		info, serr := s.file.Stat()
+		if serr != nil {
+			err = serr
+			return
+		}
+		logrus.Debug("size:", info.Size())
+
+		// Read all first the messages from the
+		// existing file.
+		notes, rerr := protoutil.ReadAllProtoMessages(s.file)
+		if rerr != nil {
+			err = rerr
+			return
+		}
+
+		notesWithKey := make(map[uuid.UUID]*note.Note)
+
+		for _, n := range notes {
+			logrus.Debug("note:", n.ID)
+			notesWithKey[n.ID] = n
+		}
+
+		s.notes = notesWithKey
+
+	})
+	return
 }
 
 // Insert inserts an n note to the store.
 func (s *Store) Insert(ctx context.Context, n *note.Note) error {
+	if err := s.lazyInit(); err != nil {
+		return err
+	}
 
 	var (
 		errChan  = make(chan error, 1)
@@ -87,7 +120,7 @@ func (s *Store) Insert(ctx context.Context, n *note.Note) error {
 
 		s.notes[n.ID] = noteutil.Copy(n)
 
-		err := s.writeNotesToFile()
+		err := s.writeAllNotesToFile()
 		if err != nil {
 			errChan <- err
 			return
@@ -104,7 +137,18 @@ func (s *Store) Insert(ctx context.Context, n *note.Note) error {
 	}
 }
 
-func (s *Store) writeNotesToFile() error {
+func (s *Store) writeAllNotesToFile() error {
+
+	// Erase existing file content
+	if err := s.file.Truncate(0); err != nil {
+		return err
+	}
+
+	// Move the cursor at start
+	if _, err := s.file.Seek(0, io.SeekStart); err != nil {
+		return err
+	}
+
 	err := protoutil.WriteAllProtoMessages(
 		s.file,
 		protoutil.ConvertToProtoMessage(
@@ -139,6 +183,9 @@ func convertMapValueToSlice(notes map[uuid.UUID]*note.Note) []*note.Note {
 
 // Update updates an existing n note to the store.
 func (s *Store) Update(ctx context.Context, n *note.Note) (updated *note.Note, err error) {
+	if err := s.lazyInit(); err != nil {
+		return nil, err
+	}
 
 	var (
 		errChan  = make(chan error, 1)
@@ -178,7 +225,7 @@ func (s *Store) Update(ctx context.Context, n *note.Note) (updated *note.Note, e
 
 		s.notes[n.ID] = existingNote
 
-		err = s.writeNotesToFile()
+		err = s.writeAllNotesToFile()
 		if err != nil {
 			errChan <- err
 			return
@@ -198,6 +245,9 @@ func (s *Store) Update(ctx context.Context, n *note.Note) (updated *note.Note, e
 
 // Delete deletes an existing note with id from the store.
 func (s *Store) Delete(ctx context.Context, id uuid.UUID) error {
+	if err := s.lazyInit(); err != nil {
+		return err
+	}
 
 	var (
 		errChan  = make(chan error, 1)
@@ -222,7 +272,7 @@ func (s *Store) Delete(ctx context.Context, id uuid.UUID) error {
 
 		delete(s.notes, id)
 
-		err := s.writeNotesToFile()
+		err := s.writeAllNotesToFile()
 		if err != nil {
 			errChan <- err
 			return
@@ -241,6 +291,9 @@ func (s *Store) Delete(ctx context.Context, id uuid.UUID) error {
 
 // Get gets the existing note with id from the store.
 func (s *Store) Get(ctx context.Context, id uuid.UUID) (*note.Note, error) {
+	if err := s.lazyInit(); err != nil {
+		return nil, err
+	}
 
 	var (
 		errChan  = make(chan error, 1)
