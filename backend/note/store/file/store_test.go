@@ -100,10 +100,46 @@ func (s *FileStoreTestSuite) TestInsert() {
 func (s *FileStoreTestSuite) TestUpdate() {
 	s.TestSuite.TestUpdate()
 
+	n := noteutil.Copy(dummyNote)
+
 	// Extend test case
 	s.Run("Updating a note that isn't in the file should return an error", func() {
 		s.SetupTest()
 
+		got, err := s.store.Update(dummyCtx, n)
+		s.Error(err)
+		s.Nil(got)
+
+		s.Equal(note.ErrNotFound, err)
+	})
+
+	s.Run("Updating a note that is in the file", func() {
+		s.SetupTest()
+
+		err := s.store.Insert(dummyCtx, n)
+		s.Require().NoError(err)
+
+		updatedNote := noteutil.Copy(n)
+		updatedNote.SetContent("Updated note content")
+		updatedNote.SetUpdatedTime(*timestamp.GenerateTimestamp())
+
+		got, err := s.store.Update(dummyCtx, updatedNote)
+		s.Require().NoError(err)
+
+		s.Equal(updatedNote, got)
+
+		// Test should also updated in the file
+		_, err = s.file.Seek(0, io.SeekStart)
+		s.Require().NoError(err)
+
+		gotNotesFromFile, err := protoutil.ReadAllProtoMessages(s.file)
+		s.Require().NoError(err)
+
+		s.Require().Len(gotNotesFromFile, 1)
+
+		gotNoteFromFile := gotNotesFromFile[0]
+
+		s.Equal(updatedNote, gotNoteFromFile)
 	})
 }
 
