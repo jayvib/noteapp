@@ -103,6 +103,9 @@ func (n *Note) GetIsFavorite() bool {
 // Notes contains an array of notes to do a array operation.
 type Notes []*Note
 
+// ForEach takes a function predicate to apply an operation for
+// each notes. When the function returns stop=true, the iteration
+// will exit.
 func (n *Notes) ForEach(fn func(note *Note) (stop bool)) {
 	for _, _note := range *n {
 		if stop := fn(_note); stop {
