@@ -65,6 +65,13 @@ func (s *TestSuite) TestInsert() {
 			assert.Equal(note.ErrCancelled, err)
 		}
 	})
+
+	s.Run("Inserting a note that don't have ID should return an error", func() {
+		cpyNote := noteutil.Copy(dummyNote)
+		cpyNote.ID = uuid.Nil
+		err := s.store.Insert(dummyCtx, cpyNote)
+		s.Equal(note.ErrNilID, err)
+	})
 }
 
 // TestGet tests the store get method.

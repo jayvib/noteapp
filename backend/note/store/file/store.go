@@ -101,6 +101,11 @@ func (s *Store) Insert(ctx context.Context, n *note.Note) error {
 		default:
 		}
 
+		if n.ID == uuid.Nil {
+			errChan <- note.ErrNilID
+			return
+		}
+
 		s.mu.Lock()
 		defer s.mu.Unlock()
 
