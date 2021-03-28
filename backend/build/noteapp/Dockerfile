@@ -7,7 +7,7 @@ RUN apk update && \
 		apk upgrade && \
 	  apk --update add git gcc make
 WORKDIR /go/src/noteapp
-COPY ./backend/ .
+COPY . .
 RUN make generate
 RUN make mod
 RUN make build-noteapp
