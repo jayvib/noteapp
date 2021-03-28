@@ -196,7 +196,7 @@ func (s *TestSuite) TestFetch() {
 		return iter
 	}
 
-	s.Run("Fetching notes successfully", func() {
+	setup := func(noteInstances int) []*note.Note {
 		// Insert notes 20 instances of note.
 		var notes []*note.Note
 		for i := 0; i < 20; i++ {
@@ -204,6 +204,12 @@ func (s *TestSuite) TestFetch() {
 			notes = append(notes, n)
 			s.Require().NoError(s.store.Insert(dummyCtx, n))
 		}
+		return notes
+	}
+
+	s.Run("Fetching notes successfully", func() {
+		// Insert notes 20 instances of note.
+		notes := setup(20)
 
 		paginationSetting := &note.Pagination{
 			Size:   20,
@@ -235,6 +241,21 @@ func (s *TestSuite) TestFetch() {
 			stop += paginationSetting.Size
 			s.Equal(want, got)
 		}
+	})
+
+	s.Run("Calling context cancel should return an notes.ErrCancelled", func() {
+		ctx, cancel := context.WithCancel(dummyCtx)
+		cancel()
+
+		_, err := s.store.Fetch(ctx, &note.Pagination{
+			Size:   5,
+			Page:   2,
+			SortBy: note.SortByTitle,
+			Ascend: false,
+		})
+
+		s.Error(err)
+		s.Equal(note.ErrCancelled, err)
 	})
 }
 
