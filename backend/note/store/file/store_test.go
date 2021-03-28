@@ -18,18 +18,21 @@ import (
 )
 
 var (
-	dummyNote *note.Note
-	dummyCtx  = context.TODO()
+	dummyCtx    = context.TODO()
+	noteFactory func() *note.Note
 )
 
 func TestMain(m *testing.M) {
-	dummyNote = &note.Note{
-		ID: uuid.New(),
+	noteFactory = func() *note.Note {
+		newNote := &note.Note{
+			ID: uuid.New(),
+		}
+		newNote.SetTitle("Test note")
+		newNote.SetContent("Test note content")
+		newNote.SetIsFavorite(false)
+		newNote.SetCreatedTime(*timestamp.GenerateTimestamp())
+		return newNote
 	}
-	dummyNote.SetTitle("Test note")
-	dummyNote.SetContent("Test note content")
-	dummyNote.SetIsFavorite(false)
-	dummyNote.SetCreatedTime(*timestamp.GenerateTimestamp())
 
 	os.Exit(m.Run())
 }
@@ -57,14 +60,7 @@ func (s *FileStoreTestSuite) SetupTest() {
 func (s *FileStoreTestSuite) TestInsert() {
 	s.TestSuite.TestInsert()
 
-	n := noteutil.Copy(dummyNote)
-
-	setup := func() {
-		err := protoutil.WriteProtoMessage(s.file, protoutil.NoteToProto(n))
-		s.Require().NoError(err)
-		err = s.file.Sync()
-		s.Require().NoError(err)
-	}
+	n := noteFactory()
 
 	// Extend the test.
 	s.Run("Inserting a note that is in the file should return an error", func() {
@@ -73,34 +69,36 @@ func (s *FileStoreTestSuite) TestInsert() {
 		// the store will read the file content since the
 		// store will only the file only once.
 		s.SetupTest()
-		setup()
+		s.writeNotesToFile(n)
+
 		err := s.store.Insert(dummyCtx, n)
 		s.Equal(note.ErrExists, err)
 	})
-
-	readAllNotesFromFile := func() []*note.Note {
-		_, err := s.file.Seek(0, io.SeekStart)
-		s.Require().NoError(err)
-		gotNotes, err := protoutil.ReadAllProtoMessages(s.file)
-		s.Require().NoError(err)
-		return gotNotes
-	}
 
 	s.Run("Inserting a note should write the note protobuf binary to the file", func() {
 		s.SetupTest()
 		err := s.store.Insert(dummyCtx, n)
 		s.Require().NoError(err)
-		gotNotes := readAllNotesFromFile()
+		gotNotes := s.readAllNotesFromFile()
 		s.Len(gotNotes, 1)
 		got := gotNotes[0]
 		s.Equal(n, got)
+	})
+
+	s.Run("Insert multiple", func() {
+
 	})
 }
 
 func (s *FileStoreTestSuite) TestUpdate() {
 	s.TestSuite.TestUpdate()
 
-	n := noteutil.Copy(dummyNote)
+	n := noteFactory()
+
+	setup := func() {
+		err := s.store.Insert(dummyCtx, n)
+		s.Require().NoError(err)
+	}
 
 	// Extend test case
 	s.Run("Updating a note that isn't in the file should return an error", func() {
@@ -115,10 +113,7 @@ func (s *FileStoreTestSuite) TestUpdate() {
 
 	s.Run("Updating a note that is in the file", func() {
 		s.SetupTest()
-
-		err := s.store.Insert(dummyCtx, n)
-		s.Require().NoError(err)
-
+		setup()
 		updatedNote := noteutil.Copy(n)
 		updatedNote.SetContent("Updated note content")
 		updatedNote.SetUpdatedTime(*timestamp.GenerateTimestamp())
@@ -127,20 +122,63 @@ func (s *FileStoreTestSuite) TestUpdate() {
 		s.Require().NoError(err)
 
 		s.Equal(updatedNote, got)
-
-		// Test should also updated in the file
-		_, err = s.file.Seek(0, io.SeekStart)
-		s.Require().NoError(err)
-
-		gotNotesFromFile, err := protoutil.ReadAllProtoMessages(s.file)
-		s.Require().NoError(err)
-
+		gotNotesFromFile := s.readAllNotesFromFile()
 		s.Require().Len(gotNotesFromFile, 1)
-
 		gotNoteFromFile := gotNotesFromFile[0]
-
 		s.Equal(updatedNote, gotNoteFromFile)
 	})
+}
+
+func (s *FileStoreTestSuite) TestGet() {
+	s.TestSuite.TestGet()
+	n := noteFactory()
+
+	s.Run("Get a note that is in the file", func() {
+		s.SetupTest()
+		s.writeNotesToFile(n)
+		got, err := s.store.Get(dummyCtx, n.ID)
+		s.Require().NoError(err)
+		s.Equal(n, got)
+	})
+}
+
+func (s *FileStoreTestSuite) TestDelete() {
+	s.TestSuite.TestDelete()
+	n := noteFactory()
+
+	s.Run("Delete a note that is in the file", func() {
+		s.SetupTest()
+		s.writeNotesToFile(n)
+
+		err := s.store.Delete(dummyCtx, n.ID)
+		s.Require().NoError(err)
+
+		gotNotes := s.readAllNotesFromFile()
+		s.Len(gotNotes, 0)
+	})
+}
+
+func (s *FileStoreTestSuite) writeNotesToFile(notes ...*note.Note) {
+	err := protoutil.WriteAllProtoMessages(
+		s.file,
+		protoutil.ConvertToProtoMessage(
+			protoutil.ConvertNotesToProtos(
+				notes,
+			),
+		)...,
+	)
+
+	s.Require().NoError(err)
+	err = s.file.Sync()
+	s.Require().NoError(err)
+}
+
+func (s *FileStoreTestSuite) readAllNotesFromFile() []*note.Note {
+	_, err := s.file.Seek(0, io.SeekStart)
+	s.Require().NoError(err)
+	gotNotes, err := protoutil.ReadAllProtoMessages(s.file)
+	s.Require().NoError(err)
+	return gotNotes
 }
 
 ////go:embed test_note.pb
