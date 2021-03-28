@@ -212,6 +212,9 @@ func (s *TestSuite) TestGet() {
 	})
 }
 
+func (s *TestSuite) TestFetch() {
+}
+
 func matchByID(id uuid.UUID) func(x interface{}) bool {
 	return func(x interface{}) bool {
 		switch v := x.(type) {

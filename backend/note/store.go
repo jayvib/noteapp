@@ -54,8 +54,10 @@ const (
 
 // Pagination contains all the necessary settings for the pagination.
 type Pagination struct {
+	// ❎ TODO: Convert to uint64
 	// Size is the size of the pagination per page.
 	Size int `json:"size,omitempty"`
+	// ❎ TODO: Convert to uint64
 	// Page is the value for the current page of the pagination.
 	Page int `json:"page,omitempty"`
 	// SortBy is a type of sort to be use during the pagination.

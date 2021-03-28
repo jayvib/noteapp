@@ -11,7 +11,7 @@ import (
 	"os"
 )
 
-// TODO: Add versioning
+// ❎ TODO: Add versioning
 // Follow this link as reference:
 // https://blog.carlmjohnson.net/post/2021/how-to-use-go-embed/
 

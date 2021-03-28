@@ -18,4 +18,7 @@ type Service interface {
 	Delete(ctx context.Context, id uuid.UUID) error
 	// Get gets the note with an id.
 	Get(ctx context.Context, id uuid.UUID) (*Note, error)
+	// Fetch fetches notes from the store using the pagination setting.
+	// It returns an iterator of the note results.
+	Fetch(ctx context.Context, pagination *Pagination) (Iterator, error)
 }

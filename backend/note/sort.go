@@ -2,7 +2,7 @@ package note
 
 import "bytes"
 
-// TODO: Create testing for each sorter.
+// ❎ TODO: Create testing for each sorter.
 
 // SortByIDSorter implements sort.Interface which
 // sort the note by its ID.

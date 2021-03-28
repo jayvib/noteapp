@@ -17,6 +17,13 @@ type Service struct {
 	store note.Store
 }
 
+// Fetch fetches notes from the store using the pagination setting.
+// It returns an iterator of the note results.
+func (s *Service) Fetch(ctx context.Context, pagination *note.Pagination) (note.Iterator, error) {
+	// ❎ TODO: Please implement me.
+	panic("implement me")
+}
+
 // New takes store and returns a service instance.
 func New(store note.Store) *Service {
 	return &Service{store: store}
