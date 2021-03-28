@@ -42,13 +42,13 @@ func (s *Store) Fetch(ctx context.Context, p *note.Pagination) (note.Iterator, e
 	// Sort by ID
 	switch p.SortBy {
 	case note.SortByID:
-		sort.Sort(note.SortByIdSorter(notes))
+		sort.Sort(note.SortByIDSorter(notes))
 	case note.SortByTitle:
 		sort.Sort(note.SortByTitleSorter(notes))
 	case note.SortByCreatedTime:
 		// TODO: To be implemented
 	default:
-		sort.Sort(note.SortByIdSorter(notes))
+		sort.Sort(note.SortByIDSorter(notes))
 	}
 
 	if stop > len(notes) {

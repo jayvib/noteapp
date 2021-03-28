@@ -2,20 +2,20 @@ package note
 
 import "bytes"
 
-// SortByIdSorter implements sort.Interface which
+// SortByIDSorter implements sort.Interface which
 // sort the note by its ID.
-type SortByIdSorter []*Note
+type SortByIDSorter []*Note
 
 // Len returns the length of notes.
-func (n SortByIdSorter) Len() int { return len(n) }
+func (n SortByIDSorter) Len() int { return len(n) }
 
 // Less compare the adjacent IDs of the note.
-func (n SortByIdSorter) Less(i, j int) bool {
+func (n SortByIDSorter) Less(i, j int) bool {
 	return bytes.Compare(n[i].ID[:], n[j].ID[:]) < 0
 }
 
 // Swap swaps the note i, and note j.
-func (n SortByIdSorter) Swap(i, j int) {
+func (n SortByIDSorter) Swap(i, j int) {
 	n[i], n[j] = n[j], n[i]
 }
 

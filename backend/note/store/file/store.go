@@ -2,6 +2,7 @@ package file
 
 import (
 	"context"
+	"errors"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"io"
@@ -47,7 +48,7 @@ type Store struct {
 // I returns the fetch result containing the current pagination settings, the
 // note data and the number of pages of the current fetch pagination.
 func (s *Store) Fetch(ctx context.Context, p *note.Pagination) (note.Iterator, error) {
-	panic("implement me")
+	return nil, errors.New("to be implemented")
 }
 
 func (s *Store) lazyInit() (err error) {
