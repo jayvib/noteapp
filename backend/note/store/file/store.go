@@ -20,15 +20,6 @@ func New(file File) *Store {
 	return newStore(file)
 }
 
-// Must must initialize a store with no error otherwise
-// it will panic.
-func Must(store *Store, err error) *Store {
-	if err != nil {
-		panic(err)
-	}
-	return store
-}
-
 func newStore(file File) *Store {
 	return &Store{
 		file:  file,
