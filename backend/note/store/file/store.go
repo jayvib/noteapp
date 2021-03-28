@@ -129,51 +129,6 @@ func (s *Store) Insert(ctx context.Context, n *note.Note) error {
 	}
 }
 
-func (s *Store) writeAllNotesToFile() error {
-
-	// Erase existing file content
-	if err := s.file.Truncate(0); err != nil {
-		return err
-	}
-
-	// Move the cursor at start
-	if _, err := s.file.Seek(0, io.SeekStart); err != nil {
-		return err
-	}
-
-	err := protoutil.WriteAllProtoMessages(
-		s.file,
-		protoutil.ConvertToProtoMessage(
-			protoutil.ConvertNotesToProtos(
-				convertMapValueToSlice(s.notes),
-			),
-		)...,
-	)
-	if err != nil {
-		return err
-	}
-
-	err = s.file.Sync()
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func convertMapValueToSlice(notes map[uuid.UUID]*note.Note) []*note.Note {
-
-	var noteSlice []*note.Note
-
-	for _, n := range notes {
-		noteSlice = append(noteSlice, n)
-	}
-
-	sort.Sort(note.Notes(noteSlice))
-
-	return noteSlice
-}
-
 // Update updates an existing n note to the store.
 func (s *Store) Update(ctx context.Context, n *note.Note) (updated *note.Note, err error) {
 	if err := s.lazyInit(); err != nil {
@@ -322,4 +277,49 @@ func (s *Store) Get(ctx context.Context, id uuid.UUID) (*note.Note, error) {
 	case n := <-noteChan:
 		return n, nil
 	}
+}
+
+func convertMapValueToSlice(notes map[uuid.UUID]*note.Note) []*note.Note {
+
+	var noteSlice []*note.Note
+
+	for _, n := range notes {
+		noteSlice = append(noteSlice, n)
+	}
+
+	sort.Sort(note.Notes(noteSlice))
+
+	return noteSlice
+}
+
+func (s *Store) writeAllNotesToFile() error {
+
+	// Erase existing file content
+	if err := s.file.Truncate(0); err != nil {
+		return err
+	}
+
+	// Move the cursor at start
+	if _, err := s.file.Seek(0, io.SeekStart); err != nil {
+		return err
+	}
+
+	err := protoutil.WriteAllProtoMessages(
+		s.file,
+		protoutil.ConvertToProtoMessage(
+			protoutil.ConvertNotesToProtos(
+				convertMapValueToSlice(s.notes),
+			),
+		)...,
+	)
+	if err != nil {
+		return err
+	}
+
+	err = s.file.Sync()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
