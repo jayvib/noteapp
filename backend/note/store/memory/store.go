@@ -6,6 +6,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"noteapp/note"
 	"noteapp/note/noteutil"
+	"sort"
 	"sync"
 )
 
@@ -16,6 +17,50 @@ var _ note.Store = (*Store)(nil)
 type Store struct {
 	mu   sync.RWMutex
 	data map[uuid.UUID]*note.Note
+}
+
+// Fetch fetches the notes in the store using the pagination setting
+// p. It takes context in order to let the caller stop the execution in any form.
+// I returns the fetch result containing the current pagination settings, the
+// note data and the number of pages of the current fetch pagination.
+func (s *Store) Fetch(ctx context.Context, p *note.Pagination) (note.Iterator, error) {
+	start := (p.Page - 1) * p.Size
+	stop := start + p.Size
+
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	if start > len(s.data) {
+		return nil, nil
+	}
+
+	// Get the all the notes in array.
+	var notes []*note.Note
+	for _, n := range s.data {
+		notes = append(notes, n)
+	}
+
+	// Sort by ID
+	switch p.SortBy {
+	case note.SortByID:
+		sort.Sort(note.SortByIdSorter(notes))
+	case note.SortByTitle:
+		sort.Sort(note.SortByTitleSorter(notes))
+	case note.SortByCreatedTime:
+		// TODO: To be implemented
+	default:
+		sort.Sort(note.SortByIdSorter(notes))
+	}
+
+	if stop > len(notes) {
+		stop = len(notes)
+	}
+
+	return &iterator{
+		s:          s,
+		notes:      notes[start:stop],
+		totalCount: len(notes),
+		totalPage:  len(notes) / p.Size,
+	}, nil
 }
 
 // New return a new instance of store.

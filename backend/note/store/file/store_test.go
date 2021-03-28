@@ -48,7 +48,7 @@ type FileStoreTestSuite struct {
 }
 
 func (s *FileStoreTestSuite) SetupTest() {
-	fs := afero.NewOsFs()
+	fs := afero.NewMemMapFs()
 	file, err := fs.OpenFile("./test_note.pb", os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0666)
 	require.NoError(s.T(), err)
 	s.file = file

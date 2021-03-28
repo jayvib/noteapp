@@ -32,4 +32,41 @@ type Store interface {
 	// It will return either a note or an error if encountered. If there's
 	// an error it can be a ErrNotFound or ErrCancelled.
 	Get(ctx context.Context, id uuid.UUID) (*Note, error)
+
+	// Fetch fetches the notes in the store using the pagination setting
+	// p. It takes context in order to let the caller stop the execution in any form.
+	// I returns the fetch result containing the current pagination settings, the
+	// note data and the number of pages of the current fetch pagination.
+	Fetch(ctx context.Context, p *Pagination) (Iterator, error)
+}
+
+// SortBy describe the type of sorts supported by the pagination.
+type SortBy string
+
+const (
+	// SortByTitle is a type that sort the note according to title.
+	SortByTitle SortBy = "title"
+	// SortByCreatedTime is a type that sort the note according to title.
+	SortByCreatedTime SortBy = "created_date"
+	// SortByID is a sort type that sort the note according to its ID.
+	SortByID SortBy = "id"
+)
+
+// Pagination contains all the necessary settings for the pagination.
+type Pagination struct {
+	// Size is the size of the pagination per page.
+	Size int `json:"size,omitempty"`
+	// Page is the value for the current page of the pagination.
+	Page int `json:"page,omitempty"`
+	// SortBy is a type of sort to be use during the pagination.
+	SortBy SortBy `json:"sortBy,omitempty"`
+	// Ascend indicates that the pagination is ascend.
+	Ascend bool `json:"ascend,omitempty"`
+}
+
+// FetchResult contains the result of the fetch pagination.
+type FetchResult struct {
+	Iterator Iterator `json:"-"`
+	// Pages is the number of pages available during the pagination.
+	Pages int `json:"pages,omitempty"`
 }

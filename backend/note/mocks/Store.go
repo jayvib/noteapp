@@ -30,6 +30,29 @@ func (_m *Store) Delete(ctx context.Context, id uuid.UUID) error {
 	return r0
 }
 
+// Fetch provides a mock function with given fields: ctx, p
+func (_m *Store) Fetch(ctx context.Context, p *note.Pagination) (note.Iterator, error) {
+	ret := _m.Called(ctx, p)
+
+	var r0 note.Iterator
+	if rf, ok := ret.Get(0).(func(context.Context, *note.Pagination) note.Iterator); ok {
+		r0 = rf(ctx, p)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(note.Iterator)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *note.Pagination) error); ok {
+		r1 = rf(ctx, p)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // Get provides a mock function with given fields: ctx, id
 func (_m *Store) Get(ctx context.Context, id uuid.UUID) (*note.Note, error) {
 	ret := _m.Called(ctx, id)

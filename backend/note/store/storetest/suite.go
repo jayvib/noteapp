@@ -2,12 +2,14 @@ package storetest
 
 import (
 	"context"
+	"fmt"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
 	"noteapp/note"
 	"noteapp/note/noteutil"
 	"noteapp/pkg/ptrconv"
 	"noteapp/pkg/timestamp"
+	"sort"
 	"time"
 )
 
@@ -177,10 +179,80 @@ func (s *TestSuite) TestDelete() {
 	})
 }
 
+// TestFetch test the fetch store method.
+func (s *TestSuite) TestFetch() {
+
+	drainIterator := func(iter note.Iterator) (got []*note.Note) {
+		for iter.Next() {
+			got = append(got, iter.Note())
+		}
+		return
+	}
+
+	fetch := func(pagination *note.Pagination) note.Iterator {
+		iter, err := s.store.Fetch(dummyCtx, pagination)
+		s.Require().NoError(err)
+		s.Require().NotNil(iter)
+		return iter
+	}
+
+	s.Run("Fetching notes successfully", func() {
+		// Insert notes 20 instances of note.
+		var notes []*note.Note
+		for i := 0; i < 20; i++ {
+			n := noteFactory(i)
+			notes = append(notes, n)
+			s.Require().NoError(s.store.Insert(dummyCtx, n))
+		}
+
+		paginationSetting := &note.Pagination{
+			Size:   20,
+			Page:   1,
+			SortBy: note.SortByTitle,
+		}
+
+		// Pre-fetch just to get the total number of pages.
+		iter := fetch(paginationSetting)
+
+		sort.Sort(note.SortByTitleSorter(notes))
+
+		start := 0
+		stop := paginationSetting.Size
+		for i := uint64(1); i <= iter.TotalPage(); i++ {
+			iter := fetch(paginationSetting)
+
+			// Assertion
+			s.Equal(uint64(len(notes)), iter.TotalCount())
+			s.Equal(uint64(paginationSetting.Size/len(notes)), iter.TotalPage())
+
+			got := drainIterator(iter)
+			s.Equal(paginationSetting.Size, len(got))
+			paginationSetting.Page++
+
+			// Assert the note content
+			want := notes[start:stop]
+			start = stop + 1
+			stop += paginationSetting.Size
+			s.Equal(want, got)
+		}
+	})
+}
+
 func (s *TestSuite) setupFunc() *note.Note {
 	n := noteutil.Copy(dummyNote)
 	n.ID = uuid.New()
 	err := s.store.Insert(dummyCtx, n)
 	s.NoError(err)
 	return n
+}
+
+func noteFactory(idx int) *note.Note {
+	time.Sleep(20 * time.Millisecond)
+	return &note.Note{
+		ID:          uuid.New(),
+		Title:       ptrconv.StringPointer(fmt.Sprintf("First Test-%d", idx)),
+		Content:     ptrconv.StringPointer(fmt.Sprintf("Lorem Ipsum-%d", idx)),
+		CreatedTime: ptrconv.TimePointer(time.Now().UTC()),
+		IsFavorite:  ptrconv.BoolPointer(false),
+	}
 }

@@ -42,6 +42,14 @@ type Store struct {
 	once sync.Once
 }
 
+// Fetch fetches the notes in the store using the pagination setting
+// p. It takes context in order to let the caller stop the execution in any form.
+// I returns the fetch result containing the current pagination settings, the
+// note data and the number of pages of the current fetch pagination.
+func (s *Store) Fetch(ctx context.Context, p *note.Pagination) (note.Iterator, error) {
+	panic("implement me")
+}
+
 func (s *Store) lazyInit() (err error) {
 	s.once.Do(func() {
 		_, err = s.file.Seek(0, io.SeekStart)
