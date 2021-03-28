@@ -6,6 +6,7 @@ import (
 	"errors"
 	"github.com/google/uuid"
 	"noteapp/pkg/ptrconv"
+	"noteapp/pkg/timestamp"
 	"time"
 )
 
@@ -64,11 +65,10 @@ func (n *Note) SetCreatedTime(t time.Time) *Note {
 
 // SetUpdatedTime sets the update time of the note.
 func (n *Note) SetUpdatedTime(t time.Time) *Note {
-	// TODO: Set updated time to now.
-
 	if !t.IsZero() {
 		n.UpdatedTime = ptrconv.TimePointer(t)
 	}
+	n.UpdatedTime = timestamp.GenerateTimestamp()
 	return n
 }
 

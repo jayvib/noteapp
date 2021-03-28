@@ -33,7 +33,6 @@ func (s *TestSuite) SetStore(store note.Store) {
 }
 
 // TestInsert test the store insert method.
-// TODO: Add test assertion where the ID is required
 func (s *TestSuite) TestInsert() {
 	require := s.Require()
 	assert := s.Assert()
