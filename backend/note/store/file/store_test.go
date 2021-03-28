@@ -84,10 +84,6 @@ func (s *FileStoreTestSuite) TestInsert() {
 		got := gotNotes[0]
 		s.Equal(n, got)
 	})
-
-	s.Run("Insert multiple", func() {
-
-	})
 }
 
 func (s *FileStoreTestSuite) TestUpdate() {

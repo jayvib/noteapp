@@ -8,6 +8,7 @@ import (
 	"noteapp/note"
 	"noteapp/note/noteutil"
 	"noteapp/note/proto/protoutil"
+	"sort"
 	"sync"
 )
 
@@ -177,7 +178,8 @@ func convertMapValueToSlice(notes map[uuid.UUID]*note.Note) []*note.Note {
 		noteSlice = append(noteSlice, n)
 	}
 
-	// TODO: Sort the notes
+	sort.Sort(note.Notes(noteSlice))
+
 	return noteSlice
 }
 

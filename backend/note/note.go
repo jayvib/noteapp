@@ -1,6 +1,7 @@
 package note
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"github.com/google/uuid"
@@ -105,11 +106,24 @@ func (n *Note) GetIsFavorite() bool {
 // Notes contains an array of notes to do a array operation.
 type Notes []*Note
 
+// Len returns the length of notes.
+func (n Notes) Len() int { return len(n) }
+
+// Less compare the adjacent IDs of the note.
+func (n Notes) Less(i, j int) bool {
+	return bytes.Compare(n[i].ID[:], n[j].ID[:]) < 0
+}
+
+// Swap swaps the note i, and note j.
+func (n Notes) Swap(i, j int) {
+	n[i], n[j] = n[j], n[i]
+}
+
 // ForEach takes a function predicate to apply an operation for
 // each notes. When the function returns stop=true, the iteration
 // will exit.
-func (n *Notes) ForEach(fn func(note *Note) (stop bool)) {
-	for _, _note := range *n {
+func (n Notes) ForEach(fn func(note *Note) (stop bool)) {
+	for _, _note := range n {
 		if stop := fn(_note); stop {
 			return
 		}
