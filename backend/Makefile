@@ -29,7 +29,7 @@ endif
 		-tags netgo \
 		-ldflags '-w -extldflags "-static"' \
 		-o ./bin/noteapp.linux \
-		./cmd/noteapp/main.go
+		./cmd/noteapp_server/main.go
 
 define DOCKER_BUILD_NOTEAPP_HELP_INFO
 # Use to build the Docker image of noteapp.
@@ -113,3 +113,13 @@ endef
 .PHONY: generate
 generate:
 	go generate ./...
+
+define INSTALL_NOTEAPP_CLI_HELP_INFO
+# Use to install the noteapp cli tool.
+#
+# Example:
+# 	make install-noteapp-cli
+endef
+install-noteapp-cli:
+	@echo " 👉 Installing noteapp CLI ⚙"
+	@go install ./cmd/noteapp_cli/

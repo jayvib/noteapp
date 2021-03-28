@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"github.com/google/uuid"
 	"noteapp/pkg/ptrconv"
+	"text/tabwriter"
 	"time"
 )
 
@@ -99,6 +101,23 @@ func (n *Note) GetUpdatedTime() time.Time {
 // GetIsFavorite gets the is-favorite boolean value of the note.
 func (n *Note) GetIsFavorite() bool {
 	return ptrconv.BoolValue(n.IsFavorite)
+}
+
+func (n *Note) String() string {
+	var buff bytes.Buffer
+	w := tabwriter.NewWriter(&buff, 0, 8, 4, ' ', tabwriter.TabIndent)
+	write := func(f string, a ...interface{}) {
+		_, _ = fmt.Fprintf(w, f, a...)
+	}
+	write("📚 ID:\t%s\n", n.ID)
+	write("📚 Title:\t%s\n", n.GetTitle())
+	write("📚 Content:\t%s\n", n.GetContent())
+	write("📚 Created Time:\t%s\n", n.GetCreatedTime())
+	write("📚 Updated Time:\t%s\n", n.GetUpdatedTime())
+	write("📚 Favorite:\t%v\n", n.GetIsFavorite())
+	write("\n")
+	_ = w.Flush()
+	return buff.String()
 }
 
 // Notes contains an array of notes to do a array operation.
