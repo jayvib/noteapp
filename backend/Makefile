@@ -40,7 +40,7 @@ define DOCKER_BUILD_NOTEAPP_HELP_INFO
 endef
 .PHONY: docker-build-noteapp
 docker-build-noteapp:
-	docker build -t ${APP_NAME} .
+	docker build -t ${APP_NAME} -f ./build/noteapp/Dockerfile .
 	docker tag ${APP_NAME} jayvib/${APP_NAME}:latest
 	docker tag ${APP_NAME} jayvib/${APP_NAME}:${VERSION}
 
