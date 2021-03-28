@@ -19,7 +19,7 @@ RUN apk update && \
 		apk add --no-cache bash ca-certificates openssh
 RUN set -ex && apk add --no-cache --virtual bash musl-dev openssl
 RUN mkdir /home/noteapp
-EXPOSE 8080
+EXPOSE 50001
 COPY --from=builder /go/src/noteapp/bin/noteapp.linux /home/noteapp/
 RUN chmod +x /home/noteapp/noteapp.linux
 CMD [ "/home/noteapp/noteapp.linux" ]
