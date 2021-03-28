@@ -6,7 +6,6 @@ import (
 	"errors"
 	"github.com/google/uuid"
 	"noteapp/pkg/ptrconv"
-	"noteapp/pkg/timestamp"
 	"time"
 )
 
@@ -68,7 +67,6 @@ func (n *Note) SetUpdatedTime(t time.Time) *Note {
 	if !t.IsZero() {
 		n.UpdatedTime = ptrconv.TimePointer(t)
 	}
-	n.UpdatedTime = timestamp.GenerateTimestamp()
 	return n
 }
 
