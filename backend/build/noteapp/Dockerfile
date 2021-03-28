@@ -16,7 +16,7 @@ FROM alpine:3.7
 RUN apk update && \
 		apk upgrade && \
 		apk --update --no-cache add tzdata && \
-		apk add --no-cache bash ca-certificates openssh && \
+		apk add --no-cache bash ca-certificates openssh
 RUN set -ex && apk add --no-cache --virtual bash musl-dev openssl
 RUN mkdir /home/noteapp
 EXPOSE 8080
