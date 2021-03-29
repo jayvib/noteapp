@@ -56,10 +56,10 @@ const (
 type Pagination struct {
 	// ❎ TODO: Convert to uint64
 	// Size is the size of the pagination per page.
-	Size int `json:"size,omitempty"`
+	Size uint64 `json:"size,omitempty"`
 	// ❎ TODO: Convert to uint64
 	// Page is the value for the current page of the pagination.
-	Page int `json:"page,omitempty"`
+	Page uint64 `json:"page,omitempty"`
 	// SortBy is a type of sort to be use during the pagination.
 	SortBy SortBy `json:"sortBy,omitempty"`
 	// Ascend indicates that the pagination is ascend.
