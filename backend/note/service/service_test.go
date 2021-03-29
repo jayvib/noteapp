@@ -15,6 +15,8 @@ import (
 	"testing"
 )
 
+// TODO: Use the in-memory store implementation
+
 var dummyCtx = context.TODO()
 
 var dummyNote = &note.Note{
