@@ -14,7 +14,7 @@ import (
 	"testing"
 )
 
-// TODO: Use the in-memory store implementation
+// TODO: Refactor code.
 
 var dummyCtx = context.TODO()
 
