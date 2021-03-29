@@ -94,6 +94,8 @@ func (s *Service) checkNoteIfExists(ctx context.Context, id uuid.UUID) (bool, er
 	logrus.Debug("checking note:", existingNote, err)
 	if err == nil && existingNote != nil {
 		return true, nil
+	} else if err == note.ErrNotFound {
+		return false, nil
 	}
 	return false, err
 }
