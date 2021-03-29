@@ -2,7 +2,6 @@ package file
 
 import (
 	"context"
-	"errors"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"io"
@@ -48,8 +47,73 @@ type Store struct {
 // I returns the fetch result containing the current pagination settings, the
 // note data and the number of pages of the current fetch pagination.
 func (s *Store) Fetch(ctx context.Context, p *note.Pagination) (note.Iterator, error) {
-	// ❎ TODO: Implement Me.
-	return nil, errors.New("to be implemented")
+
+	var (
+		errChan  = make(chan error, 1)
+		iterChan = make(chan note.Iterator, 1)
+	)
+
+	go func() {
+		defer func() {
+			close(errChan)
+			close(iterChan)
+		}()
+
+		select {
+		case <-ctx.Done():
+			errChan <- ctx.Err()
+			return
+		default:
+		}
+
+		start := (p.Page - 1) * p.Size
+		stop := start + p.Size
+
+		s.mu.RLock()
+		defer s.mu.RUnlock()
+
+		if start > len(s.notes) {
+			iterChan <- nil
+			return
+		}
+
+		// Get all the notes in array.
+		var notes []*note.Note
+		for _, n := range s.notes {
+			notes = append(notes, n)
+		}
+
+		// Sort by ID
+		switch p.SortBy {
+		case note.SortByID:
+			sort.Sort(note.SortByIDSorter(notes))
+		case note.SortByTitle:
+			sort.Sort(note.SortByTitleSorter(notes))
+		case note.SortByCreatedTime:
+			sort.Sort(note.SortByCreatedDateSorter(notes))
+		default:
+			sort.Sort(note.SortByIDSorter(notes))
+		}
+
+		if stop > len(notes) {
+			stop = len(notes)
+		}
+
+		iter := &iterator{
+			s:          s,
+			notes:      notes[start:stop],
+			totalCount: len(notes),
+			totalPage:  len(notes) / p.Size,
+		}
+		iterChan <- iter
+	}()
+
+	select {
+	case err := <-errChan:
+		return nil, err
+	case iter := <-iterChan:
+		return iter, nil
+	}
 }
 
 func (s *Store) lazyInit() (err error) {
