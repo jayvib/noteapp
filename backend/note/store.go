@@ -54,14 +54,34 @@ const (
 
 // Pagination contains all the necessary settings for the pagination.
 type Pagination struct {
-	// Size is the size of the pagination per page.
+	// Size is the size of the pagination per page. If Size is 0 value
+	// the default will be 25.
 	Size uint64 `json:"size,omitempty"`
-	// Page is the value for the current page of the pagination.
+	// Page is the value for the current page of the pagination. If Page
+	// is 0 value the default is 1.
 	Page uint64 `json:"page,omitempty"`
 	// SortBy is a type of sort to be use during the pagination.
+	// If SortBy is empty string the default will be SortByTitle.
 	SortBy SortBy `json:"sortBy,omitempty"`
 	// Ascend indicates that the pagination is ascend.
+	// Default is true.
 	Ascend bool `json:"ascend,omitempty"`
+}
+
+// Check checks the value of each pagination field and set default
+// value when empty.
+func (p *Pagination) Check() {
+	if p.Size == 0 {
+		p.Size = 25
+	}
+
+	if p.Page == 0 {
+		p.Page = 1
+	}
+
+	if p.SortBy == "" {
+		p.SortBy = SortByID
+	}
 }
 
 // FetchResult contains the result of the fetch pagination.

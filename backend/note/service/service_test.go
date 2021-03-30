@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
 	"noteapp/note"
@@ -11,6 +12,7 @@ import (
 	"noteapp/pkg/ptrconv"
 	"noteapp/pkg/timestamp"
 	"noteapp/pkg/util/errorutil"
+	"sort"
 	"testing"
 )
 
@@ -25,12 +27,28 @@ var dummyNote = &note.Note{
 	IsFavorite: ptrconv.BoolPointer(false),
 }
 
+func noteFactory(idx int) *note.Note {
+	return &note.Note{
+		ID:         uuid.New(),
+		Title:      ptrconv.StringPointer(fmt.Sprintf("First Test-%d", idx)),
+		Content:    ptrconv.StringPointer(fmt.Sprintf("Lorem Ipsum-%d", idx)),
+		IsFavorite: ptrconv.BoolPointer(false),
+	}
+}
+
 func Test(t *testing.T) {
 	suite.Run(t, new(TestSuite))
 }
 
 type TestSuite struct {
 	suite.Suite
+	store note.Store
+	svc   note.Service
+}
+
+func (s *TestSuite) SetupTest() {
+	s.store = memory.New()
+	s.svc = New(s.store)
 }
 
 func (s *TestSuite) TestCreate() {
@@ -178,4 +196,53 @@ func (s *TestSuite) TestGet() {
 }
 
 func (s *TestSuite) TestFetch() {
+
+	setup := func(size int) []*note.Note {
+		var notes []*note.Note
+		for i := 0; i < size; i++ {
+			n := noteFactory(i)
+			newNote, err := s.svc.Create(dummyCtx, n)
+			s.Require().NoError(err)
+			notes = append(notes, newNote)
+		}
+		return notes
+	}
+
+	drainIterator := func(iter note.Iterator) []*note.Note {
+		var got []*note.Note
+		for iter.Next() {
+			got = append(got, iter.Note())
+		}
+		return got
+	}
+
+	s.Run("Fetching notes successfully", func() {
+		// Insert notes
+		notes := setup(20)
+		sort.Sort(note.SortByTitleSorter(notes))
+
+		pagination := &note.Pagination{
+			Size:   20,
+			Page:   1,
+			SortBy: "title",
+			Ascend: false,
+		}
+		iter, err := s.svc.Fetch(dummyCtx, pagination)
+		s.Require().NoError(err)
+
+		got := drainIterator(iter)
+		s.Len(got, int(pagination.Size))
+		s.Equal(notes, got)
+	})
+
+	s.Run("Fetching a note with default pagination setting", func() {
+		_ = setup(50)
+		pagination := &note.Pagination{}
+
+		iter, err := s.svc.Fetch(dummyCtx, pagination)
+		s.Require().NoError(err)
+
+		got := drainIterator(iter)
+		s.Len(got, 25)
+	})
 }
