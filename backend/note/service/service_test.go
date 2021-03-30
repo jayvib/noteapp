@@ -2,20 +2,21 @@ package service
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"github.com/google/uuid"
-	"github.com/sirupsen/logrus"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"noteapp/note"
-	"noteapp/note/mocks"
 	"noteapp/note/noteutil"
+	"noteapp/note/store/memory"
 	"noteapp/pkg/ptrconv"
 	"noteapp/pkg/timestamp"
 	"noteapp/pkg/util/errorutil"
+	"sort"
 	"testing"
 )
 
-// TODO: Use the in-memory store implementation
+// TODO: Refactor code.
 
 var dummyCtx = context.TODO()
 
@@ -26,19 +27,31 @@ var dummyNote = &note.Note{
 	IsFavorite: ptrconv.BoolPointer(false),
 }
 
+func noteFactory(idx int) *note.Note {
+	return &note.Note{
+		ID:         uuid.New(),
+		Title:      ptrconv.StringPointer(fmt.Sprintf("First Test-%d", idx)),
+		Content:    ptrconv.StringPointer(fmt.Sprintf("Lorem Ipsum-%d", idx)),
+		IsFavorite: ptrconv.BoolPointer(false),
+	}
+}
+
 func Test(t *testing.T) {
-	logrus.SetLevel(logrus.DebugLevel)
 	suite.Run(t, new(TestSuite))
 }
 
 type TestSuite struct {
 	suite.Suite
+	store note.Store
+	svc   note.Service
+}
+
+func (s *TestSuite) SetupTest() {
+	s.store = memory.New()
+	s.svc = New(s.store)
 }
 
 func (s *TestSuite) TestCreate() {
-	var (
-		t = s.T()
-	)
 
 	getNote := func() *note.Note {
 		cpyNote := noteutil.Copy(dummyNote)
@@ -50,8 +63,7 @@ func (s *TestSuite) TestCreate() {
 	s.Run("Creating a new note", func() {
 		cpyNote := getNote()
 
-		store := new(mocks.Store)
-		store.On("Insert", mock.Anything, mock.AnythingOfType("*note.Note")).Return(nil, cpyNote)
+		store := memory.New()
 
 		svc := New(store)
 
@@ -61,75 +73,55 @@ func (s *TestSuite) TestCreate() {
 		s.NotNil(got.CreatedTime)
 
 		s.True(cpyNote != got, "Expecting a new pointer address for the received note from create")
-
-		store.AssertExpectations(t)
 	})
 
 	s.Run("Creating an existing note should return an error", func() {
-		store := new(mocks.Store)
-		store.On("Get", mock.Anything, mock.MatchedBy(matchByID(dummyNote.ID))).Return(dummyNote, nil)
-
+		store := memory.New()
 		svc := New(store)
+		newNote, err := svc.Create(dummyCtx, dummyNote)
+		s.NoError(err)
 
-		got, err := svc.Create(dummyCtx, dummyNote)
-		s.Error(err)
+		got, err := svc.Create(dummyCtx, newNote)
+		s.Equal(note.ErrExists, errors.Unwrap(err))
 		s.Nil(got)
-
-		store.AssertExpectations(t)
 	})
 
 	s.Run("While inserting to  store it returns an error", func() {
-
 		cpyNote := getNote()
-
-		store := new(mocks.Store)
-		store.On("Insert", mock.Anything, mock.AnythingOfType("*note.Note")).Return(note.ErrCancelled)
-
+		store := memory.New()
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
 		svc := New(store)
-
-		_, err := svc.Create(dummyCtx, cpyNote)
-
-		s.Error(err)
-		store.AssertExpectations(t)
+		_, err := svc.Create(ctx, cpyNote)
+		s.Equal(note.ErrCancelled, err)
 	})
 }
 
 func (s *TestSuite) TestUpdate() {
-	t := s.T()
 	s.Run("Updating an existing note", func() {
 		want := noteutil.Copy(dummyNote)
 		want.UpdatedTime = timestamp.GenerateTimestamp()
 
-		returnNote := noteutil.Copy(dummyNote)
-		store := new(mocks.Store)
-		store.On("Update", mock.Anything, mock.MatchedBy(matchByID(want.ID))).Return(returnNote, nil).
-			Run(func(args mock.Arguments) {
-				noteParam := args[1].(*note.Note)
-				returnNote.UpdatedTime = noteParam.UpdatedTime
-			})
-		store.On("Get", mock.Anything, mock.MatchedBy(matchByID(want.ID))).Return(new(note.Note), nil)
+		store := memory.New()
 
 		svc := New(store)
-		got, err := svc.Update(dummyCtx, dummyNote)
+		newNote, err := svc.Create(dummyCtx, want)
+		s.Require().NoError(err)
+
+		got, err := svc.Update(dummyCtx, newNote)
 
 		s.NoError(err)
-		s.Equal(want, got)
+		s.Equal(newNote, got)
 		s.NotNil(got.UpdatedTime)
-		store.AssertExpectations(t)
 	})
 
 	s.Run("Updating a non-existing note should return an error", func() {
-		want := noteutil.Copy(dummyNote)
-
-		store := new(mocks.Store)
-		store.On("Get", mock.Anything, mock.MatchedBy(matchByID(want.ID))).Return(nil, note.ErrNotFound)
-
+		store := memory.New()
 		svc := New(store)
 		got, err := svc.Update(dummyCtx, dummyNote)
 
 		s.Equal(note.ErrNotFound, errorutil.TryUnwrapErr(err))
 		s.Nil(got)
-		store.AssertExpectations(t)
 	})
 
 	s.Run("Updating a note with no ID should return an error", func() {
@@ -142,36 +134,28 @@ func (s *TestSuite) TestUpdate() {
 	})
 
 	s.Run("While updating to  store it returns an error", func() {
-
 		cpyNote := noteutil.Copy(dummyNote)
-
-		store := new(mocks.Store)
-		store.On("Get", mock.Anything, mock.MatchedBy(matchByID(cpyNote.ID))).Return(new(note.Note), nil)
-		store.On("Update", mock.Anything, mock.AnythingOfType("*note.Note")).Return(nil, note.ErrCancelled)
-
+		store := memory.New()
 		svc := New(store)
-
-		_, err := svc.Update(dummyCtx, cpyNote)
-
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+		_, err := svc.Update(ctx, cpyNote)
 		s.Error(err)
-		store.AssertExpectations(t)
-
+		s.Equal(note.ErrCancelled, err)
 	})
 }
 
 func (s *TestSuite) TestDelete() {
-	t := s.T()
 	s.Run("Deleting a note", func() {
 		cpyNote := noteutil.Copy(dummyNote)
-		store := new(mocks.Store)
-		store.On("Delete", mock.Anything, mock.MatchedBy(matchByID(cpyNote.ID))).Return(nil)
-
+		store := memory.New()
 		svc := New(store)
 
-		err := svc.Delete(dummyCtx, cpyNote.ID)
-		s.NoError(err)
+		newNote, err := svc.Create(dummyCtx, cpyNote)
+		s.Require().NoError(err)
 
-		store.AssertExpectations(t)
+		err = svc.Delete(dummyCtx, newNote.ID)
+		s.NoError(err)
 	})
 
 	s.Run("Deleting a note with a Nil uuid", func() {
@@ -179,32 +163,29 @@ func (s *TestSuite) TestDelete() {
 		err := svc.Delete(dummyCtx, uuid.Nil)
 		s.Equal(note.ErrNilID, err)
 	})
+
+	// TODO: Add testing for context cancellation.
+
 }
 
 func (s *TestSuite) TestGet() {
-	t := s.T()
 	s.Run("Getting an existing note", func() {
 		cpyNote := noteutil.Copy(dummyNote)
-		store := new(mocks.Store)
-		store.On("Get", mock.Anything, mock.MatchedBy(matchByID(cpyNote.ID))).Return(cpyNote, nil)
-
+		store := memory.New()
 		svc := New(store)
-		got, err := svc.Get(dummyCtx, cpyNote.ID)
-		s.NoError(err)
+		newNote, err := svc.Create(dummyCtx, cpyNote)
+		s.Require().NoError(err)
 
+		got, err := svc.Get(dummyCtx, newNote.ID)
+		s.NoError(err)
 		s.Equal(cpyNote, got)
-		store.AssertExpectations(t)
 	})
 
 	s.Run("Getting a none-existing note should return a not found error", func() {
-		store := new(mocks.Store)
-		store.On("Get", mock.Anything, mock.Anything).Return(nil, note.ErrNotFound)
-
+		store := memory.New()
 		svc := New(store)
 		_, err := svc.Get(dummyCtx, uuid.New())
 		s.Equal(note.ErrNotFound, err)
-
-		store.AssertExpectations(t)
 	})
 
 	s.Run("Getting a note with a Nil uuid", func() {
@@ -215,17 +196,53 @@ func (s *TestSuite) TestGet() {
 }
 
 func (s *TestSuite) TestFetch() {
-}
 
-func matchByID(id uuid.UUID) func(x interface{}) bool {
-	return func(x interface{}) bool {
-		switch v := x.(type) {
-		case uuid.UUID:
-			return v == id
-		case *note.Note:
-			return v.ID == id
-		default:
-			return false
+	setup := func(size int) []*note.Note {
+		var notes []*note.Note
+		for i := 0; i < size; i++ {
+			n := noteFactory(i)
+			newNote, err := s.svc.Create(dummyCtx, n)
+			s.Require().NoError(err)
+			notes = append(notes, newNote)
 		}
+		return notes
 	}
+
+	drainIterator := func(iter note.Iterator) []*note.Note {
+		var got []*note.Note
+		for iter.Next() {
+			got = append(got, iter.Note())
+		}
+		return got
+	}
+
+	s.Run("Fetching notes successfully", func() {
+		// Insert notes
+		notes := setup(20)
+		sort.Sort(note.SortByTitleSorter(notes))
+
+		pagination := &note.Pagination{
+			Size:   20,
+			Page:   1,
+			SortBy: "title",
+			Ascend: false,
+		}
+		iter, err := s.svc.Fetch(dummyCtx, pagination)
+		s.Require().NoError(err)
+
+		got := drainIterator(iter)
+		s.Len(got, int(pagination.Size))
+		s.Equal(notes, got)
+	})
+
+	s.Run("Fetching a note with default pagination setting", func() {
+		_ = setup(50)
+		pagination := &note.Pagination{}
+
+		iter, err := s.svc.Fetch(dummyCtx, pagination)
+		s.Require().NoError(err)
+
+		got := drainIterator(iter)
+		s.Len(got, 25)
+	})
 }

@@ -155,7 +155,6 @@ func (s *FileStoreTestSuite) TestDelete() {
 }
 
 func (s *FileStoreTestSuite) TestFetch() {
-	//s.T().SkipNow()
 	s.TestSuite.TestFetch()
 }
 

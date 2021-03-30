@@ -48,7 +48,7 @@ func (s *Store) Fetch(ctx context.Context, p *note.Pagination) (note.Iterator, e
 
 		s.mu.RLock()
 		defer s.mu.RUnlock()
-		if start > len(s.data) {
+		if int(start) > len(s.data) {
 			iterChan <- nil
 			return
 		}
@@ -71,15 +71,15 @@ func (s *Store) Fetch(ctx context.Context, p *note.Pagination) (note.Iterator, e
 			sort.Sort(note.SortByIDSorter(notes))
 		}
 
-		if stop > len(notes) {
-			stop = len(notes)
+		if noteSize := uint64(len(notes)); stop > noteSize {
+			stop = noteSize
 		}
 
 		iter := &iterator{
 			s:          s,
 			notes:      notes[start:stop],
 			totalCount: len(notes),
-			totalPage:  len(notes) / p.Size,
+			totalPage:  len(notes) / int(p.Size),
 		}
 		iterChan <- iter
 	}()

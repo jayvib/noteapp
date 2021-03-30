@@ -222,17 +222,17 @@ func (s *TestSuite) TestFetch() {
 
 		sort.Sort(note.SortByTitleSorter(notes))
 
-		start := 0
+		var start uint64
 		stop := paginationSetting.Size
 		for i := uint64(1); i <= iter.TotalPage(); i++ {
 			iter := fetch(paginationSetting)
 
 			// Assertion
 			s.Equal(uint64(len(notes)), iter.TotalCount())
-			s.Equal(uint64(paginationSetting.Size/len(notes)), iter.TotalPage())
+			s.Equal(paginationSetting.Size/uint64(len(notes)), iter.TotalPage())
 
 			got := drainIterator(iter)
-			s.Equal(paginationSetting.Size, len(got))
+			s.Equal(paginationSetting.Size, uint64(len(got)))
 			paginationSetting.Page++
 
 			// Assert the note content
