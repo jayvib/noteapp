@@ -1,5 +1,6 @@
 APP_NAME:=noteapp
 VERSION:=0.0.0
+GOPROXY:=https://proxy.golang.org
 
 define LOCAL_SERVER_HELP_INFO
 # Use to run noteapp server in local machine.
@@ -24,7 +25,7 @@ ifeq ($(wildcard ./bin/.*),)
 	@mkdir ./bin
 endif
 	@echo " ---> Building Noteapp"
-	@CGO_ENABLED=0 go build \
+	@CGO_ENABLED=0 GOPROXY=${GOPROXY} go build \
 		-a \
 		-tags netgo \
 		-ldflags '-w -extldflags "-static"' \
@@ -40,7 +41,7 @@ define DOCKER_BUILD_NOTEAPP_HELP_INFO
 endef
 .PHONY: docker-build-noteapp
 docker-build-noteapp:
-	docker build -t ${APP_NAME} -f ./build/noteapp/Dockerfile .
+	docker build -t ${APP_NAME} -f ./build/noteapp/docker/Dockerfile .
 	docker tag ${APP_NAME} jayvib/${APP_NAME}:latest
 	docker tag ${APP_NAME} jayvib/${APP_NAME}:${VERSION}
 
