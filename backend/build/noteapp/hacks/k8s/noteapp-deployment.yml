@@ -2,6 +2,9 @@
 # During rolling update run the command:
 # kubectl rollout status deployment noteapp
 #
+# Rollback:
+# kubectl rollout undo deployment noteapp --to-revision=1
+#
 apiVersion: apps/v1
 kind: Deployment
 metadata:
