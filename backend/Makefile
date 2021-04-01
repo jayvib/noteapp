@@ -1,6 +1,5 @@
 APP_NAME:=noteapp
 VERSION:=0.1.0
-GOPROXY:=https://proxy.golang.org
 
 define LOCAL_SERVER_HELP_INFO
 # Use to run noteapp server in local machine.
@@ -25,7 +24,7 @@ ifeq ($(wildcard ./bin/.*),)
 	@mkdir ./bin
 endif
 	@echo " ---> Building Noteapp"
-	@CGO_ENABLED=0 GOPROXY=${GOPROXY} go build \
+	@CGO_ENABLED=0 go build \
 		-a \
 		-tags netgo \
 		-ldflags '-w -extldflags "-static"' \
@@ -103,6 +102,9 @@ define MOD_HELP_INFO
 endef
 .PHONY: mod
 mod:
+ifdef GOPROXY
+	@echo 👉 Go proxy setting found: GOPROXY=${GOPROXY}
+endif
 	@go mod download
 
 define GENERATE_HELP_INFO
