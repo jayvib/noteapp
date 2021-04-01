@@ -1,3 +1,9 @@
+#!make
+
+# Include the envfile that contains all the metadata about the app
+include build/noteapp/envfile
+export $(shell sed 's/=.*//' build/noteapp/envfile)
+
 APP_NAME:=noteapp
 VERSION:=0.1.0
 
