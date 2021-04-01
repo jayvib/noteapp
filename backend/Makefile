@@ -1,5 +1,5 @@
 APP_NAME:=noteapp
-VERSION:=0.0.0
+VERSION:=0.1.0
 GOPROXY:=https://proxy.golang.org
 
 define LOCAL_SERVER_HELP_INFO
