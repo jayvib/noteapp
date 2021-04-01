@@ -5,7 +5,6 @@ include build/noteapp/envfile
 export $(shell sed 's/=.*//' build/noteapp/envfile)
 
 APP_NAME:=noteapp
-VERSION:=0.1.0
 
 define LOCAL_SERVER_HELP_INFO
 # Use to run noteapp server in local machine.
@@ -25,6 +24,9 @@ define BUILD_NOTEAPP_HELP_INFO
 endef
 .PHONY: build-noteapp
 build-noteapp: # Use to build the executable file of the noteapp. The executable will store in ./bin/ directory
+ifdef NOTEAPP_VERSION
+	@echo 🛠 Building Noteapp version: ${NOTEAPP_VERSION}
+endif
 ifeq ($(wildcard ./bin/.*),)
 	@echo " ---> Creating bin directory"
 	@mkdir ./bin
@@ -34,6 +36,7 @@ endif
 		-a \
 		-tags netgo \
 		-ldflags '-w -extldflags "-static"' \
+		-ldflags '-X "main.Version=${NOTEAPP_VERSION}"' \
 		-o ./bin/noteapp.linux \
 		./cmd/noteapp_server/main.go
 
@@ -46,9 +49,10 @@ define DOCKER_BUILD_NOTEAPP_HELP_INFO
 endef
 .PHONY: docker-build-noteapp
 docker-build-noteapp:
+	@echo 🛠 Building Noteapp Docker Image
 	docker build -t ${APP_NAME} -f ./build/noteapp/docker/Dockerfile .
 	docker tag ${APP_NAME} jayvib/${APP_NAME}:latest
-	docker tag ${APP_NAME} jayvib/${APP_NAME}:${VERSION}
+	docker tag ${APP_NAME} jayvib/${APP_NAME}:${NOTEAPP_VERSION}
 
 define FMT_HELP_INFO
 # Use to format the Go source code.
@@ -58,7 +62,8 @@ define FMT_HELP_INFO
 endef
 .PHONY: fmt
 fmt:
-	go fmt ./...
+	@echo 🧹 Formatting source code
+	@go fmt ./...
 
 define UNIT_TESTS_HELP_INFO
 # Use to run unit testing in noteapp source code.
@@ -68,7 +73,7 @@ define UNIT_TESTS_HELP_INFO
 endef
 .PHONY: unit-test
 unit-test: lint
-	@echo "Running unit tests"
+	@echo "🏃 Running unit tests"
 	@go test -short ./... -tags=unit-tests -race | grep -v '^?'
 
 define LINT_HELP_INFO
@@ -111,6 +116,7 @@ mod:
 ifdef GOPROXY
 	@echo 👉 Go proxy setting found: GOPROXY=${GOPROXY}
 endif
+	@echo 📥 Downloading Dependencies
 	@go mod download
 
 define GENERATE_HELP_INFO

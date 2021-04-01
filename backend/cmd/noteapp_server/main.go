@@ -10,11 +10,17 @@ import (
 	noteservice "noteapp/note/service"
 	filestore "noteapp/note/store/file"
 	"os"
+	"time"
 )
 
-// ❎ TODO: Add versioning
-// Follow this link as reference:
-// https://blog.carlmjohnson.net/post/2021/how-to-use-go-embed/
+var (
+	// Version is the version of the current server
+	Version = "development"
+	// BuildCommit is the git build recent commit during server build.
+	BuildCommit = "development"
+	// BuildDate is the timestamp of when the server last build.
+	BuildDate = time.Now().Truncate(time.Second).UTC()
+)
 
 const (
 	port       = 50001
