@@ -15,6 +15,14 @@ endef
 local-server: build-noteapp
 	./bin/${APP_NAME}.linux
 
+define BUILD_HELP_INFO
+# Build run the build step process of Noteapp Docker image.
+#
+# Example:
+# 	make build
+endef
+build: clean docker-build-noteapp clean
+
 define BUILD_NOTEAPP_HELP_INFO
 # Use to build the executable file of noteapp.
 # The executable will store in backend/bin/
@@ -138,3 +146,13 @@ endef
 install-noteapp-cli:
 	@echo " 👉 Installing noteapp CLI ⚙"
 	@go install ./cmd/noteapp_cli/
+
+define CLEAN_HELP_INFO
+# Use to clean the image layers after building the Docker image
+#
+# Example:
+# 	make clean
+endef
+clean:
+	@echo "🧹️ Cleaning up resources"
+	@docker images -q --filter "dangling=true" | xargs docker rmi || true
