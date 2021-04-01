@@ -25,7 +25,7 @@ endef
 .PHONY: build-noteapp
 build-noteapp: # Use to build the executable file of the noteapp. The executable will store in ./bin/ directory
 ifdef NOTEAPP_VERSION
-	@echo 🛠 Building Noteapp version: ${NOTEAPP_VERSION}
+	@echo "🛠 Building Noteapp version: ${NOTEAPP_VERSION}"
 endif
 ifeq ($(wildcard ./bin/.*),)
 	@echo " ---> Creating bin directory"
@@ -49,7 +49,7 @@ define DOCKER_BUILD_NOTEAPP_HELP_INFO
 endef
 .PHONY: docker-build-noteapp
 docker-build-noteapp:
-	@echo 🛠 Building Noteapp Docker Image
+	@echo "🛠 Building Noteapp Docker Image"
 	docker build -t ${APP_NAME} -f ./build/noteapp/docker/Dockerfile .
 	docker tag ${APP_NAME} jayvib/${APP_NAME}:latest
 	docker tag ${APP_NAME} jayvib/${APP_NAME}:${NOTEAPP_VERSION}
@@ -62,7 +62,7 @@ define FMT_HELP_INFO
 endef
 .PHONY: fmt
 fmt:
-	@echo 🧹 Formatting source code
+	@echo "🧹 Formatting source code"
 	@go fmt ./...
 
 define UNIT_TESTS_HELP_INFO
@@ -114,9 +114,9 @@ endef
 .PHONY: mod
 mod:
 ifdef GOPROXY
-	@echo 👉 Go proxy setting found: GOPROXY=${GOPROXY}
+	@echo "👉 Go proxy setting found: GOPROXY=${GOPROXY}"
 endif
-	@echo 📥 Downloading Dependencies
+	@echo "📥 Downloading Dependencies"
 	@go mod download
 
 define GENERATE_HELP_INFO
