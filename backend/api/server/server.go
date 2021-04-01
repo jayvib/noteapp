@@ -98,3 +98,8 @@ func (s *Server) Close() {
 		logrus.Error(err)
 	}
 }
+
+// AddRoutes takes routes to register in server.
+func (s *Server) AddRoutes(routes ...api.Route) {
+	s.HTTPRoutes = append(s.HTTPRoutes, routes...)
+}

@@ -5,6 +5,7 @@ import (
 	"noteapp/api"
 	"noteapp/api/middleware"
 	"noteapp/api/server"
+	"noteapp/api/server/meta"
 	"noteapp/note/api/v1/transport/rest"
 	noteservice "noteapp/note/service"
 	filestore "noteapp/note/store/file"
@@ -32,11 +33,16 @@ func main() {
 		Middlewares: []api.NamedMiddleware{
 			middleware.NewLoggingMiddleware(),
 		},
-		HTTPRoutes: rest.Routes(svc),
 	})
 
-	defer srv.Close()
+	srv.AddRoutes(meta.Routes(&meta.Metadata{
+		Version:     Version,
+		BuildCommit: BuildCommit,
+		BuildDate:   BuildDate,
+	})...)
+	srv.AddRoutes(rest.Routes(svc)...)
 
+	defer srv.Close()
 	mustNoError(srv.ListenAndServe())
 }
 
