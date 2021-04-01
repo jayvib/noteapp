@@ -157,7 +157,7 @@ define CLEAN_HELP_INFO
 endef
 clean:
 	@echo "🧹️ Cleaning up resources"
-	@docker images -q --filter "dangling=true" | xargs docker rmi || true >& /dev/null
+	@docker images -q --filter "dangling=true" | xargs docker rmi || true
 
 test-git:
 	@echo "Git Commit: $(shell git rev-parse HEAD)"
