@@ -5,6 +5,7 @@ include build/noteapp/envfile
 export $(shell sed 's/=.*//' build/noteapp/envfile)
 
 APP_NAME:=noteapp
+GIT_COMMIT:=$(shell git rev-parse HEAD)
 
 define LOCAL_SERVER_HELP_INFO
 # Use to run noteapp server in local machine.
@@ -45,6 +46,7 @@ endif
 		-tags netgo \
 		-ldflags '-w -extldflags "-static"' \
 		-ldflags '-X "main.Version=${NOTEAPP_VERSION}"' \
+		-ldflags '-X "main.BuildCommit=${GIT_COMMIT}"' \
 		-o ./bin/noteapp.linux \
 		./cmd/noteapp_server/main.go
 
@@ -155,4 +157,7 @@ define CLEAN_HELP_INFO
 endef
 clean:
 	@echo "🧹️ Cleaning up resources"
-	@docker images -q --filter "dangling=true" | xargs docker rmi || true
+	@docker images -q --filter "dangling=true" | xargs docker rmi || true >& /dev/null
+
+test-git:
+	@echo "Git Commit: $(shell git rev-parse HEAD)"
