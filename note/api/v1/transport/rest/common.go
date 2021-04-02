@@ -12,6 +12,14 @@ import (
 // StatusClientClosed is an http status where the client cancels a request.
 const StatusClientClosed = 499
 
+func newErrorWrapper(err error) errorWrapper {
+	return errorWrapper{
+		origErr:    err,
+		message:    getMessage(err),
+		statusCode: getStatusCode(err),
+	}
+}
+
 type errorWrapper struct {
 	origErr    error
 	message    string

@@ -35,10 +35,17 @@ func makeHandler(svc note.Service) http.Handler {
 		encodeResponse,
 	)
 
+	fetchHandler := httptransport.NewServer(
+		makeFetchEndpoint(svc),
+		decodeFetchRequest,
+		encodeResponse,
+	)
+
 	router.Handle("/note/{id}", getHandler).Methods(http.MethodGet)
 	router.Handle("/note", createHandler).Methods(http.MethodPost)
 	router.Handle("/note", updateHandler).Methods(http.MethodPut)
 	router.Handle("/note/{id}", deleteHandler).Methods(http.MethodDelete)
+	router.Handle("/notes", fetchHandler).Methods(http.MethodGet)
 
 	return router
 }
