@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: noteapp
 spec:
-  replicas: 5
+  replicas: 1
   selector:
     matchLabels:
       app: noteapp
@@ -18,8 +18,27 @@ spec:
       labels:
         app: noteapp
     spec:
+      volumes:
+        - name: volconf
+          configMap:
+            name: noteapp-config
       containers:
         - name: noteapp-pod
           image: jayvib/noteapp:latest
           ports:
             - containerPort: 50001
+          volumeMounts:
+            - mountPath: /etc/noteapp
+              name: volconf
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: noteapp-config
+data:
+  config.yaml: |
+    store:
+      file:
+        path: /etc/noteapp
+    server:
+      port: 50001
