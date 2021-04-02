@@ -26,7 +26,7 @@ build: clean docker-build-noteapp clean
 
 define BUILD_NOTEAPP_HELP_INFO
 # Use to build the executable file of noteapp.
-# The executable will store in backend/bin/
+# The executable will store in bin/
 #
 # Example:
 # 	make build-noteapp
