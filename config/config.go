@@ -1,7 +1,14 @@
 package config
 
 import (
+	"github.com/spf13/afero"
 	"github.com/spf13/viper"
+	"sync"
+)
+
+var (
+	once sync.Once
+	conf *Config
 )
 
 // New initializes the configuration setting. It searches for the
@@ -12,14 +19,20 @@ import (
 // - "$HOME/.noteapp"
 // - "."
 func New() *Config {
-	conf, err := newConfig()
-	if err != nil {
-		panic(err)
-	}
+	// Do singleton
+	once.Do(func() {
+		var err error
+		conf, err = newConfig(afero.NewOsFs())
+		if err != nil {
+			panic(err)
+		}
+	})
+
 	return conf
 }
 
-func newConfig() (*Config, error) {
+func newConfig(fs afero.Fs) (*Config, error) {
+	viper.SetFs(fs)
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
 
@@ -36,9 +49,10 @@ func newConfig() (*Config, error) {
 		viper.Set("store.file.path", ".")
 	}
 
-	if viper.Get("store.file.path") == nil {
-
-	}
+	//if viper.Get("server.port") == nil {
+	//	viper.Set("server.port", 50001)
+	//}
+	//
 
 	var conf Config
 	err = viper.Unmarshal(&conf)
@@ -52,14 +66,26 @@ func newConfig() (*Config, error) {
 // Config is the application-level configuration containing
 // all the information for running the application.
 type Config struct {
+	Server Server
 	// Store Database Configuration
 	Store Store
 }
 
+// Server contains the server configuration.
+type Server struct {
+	// Port is the port of the server when its value is empty
+	// in config file the default "50001" will be use.
+	Port int
+}
+
+// Store contains the store database configuration.
 type Store struct {
 	File File
 }
 
+// File contains the file store configuration.
 type File struct {
+	// path is the path where the files of the file store will be store.
+	// When its value is empty in config file the default "." will be use.
 	Path string
 }

@@ -1,8 +1,9 @@
 package config
 
 import (
+	"github.com/spf13/afero"
 	"github.com/stretchr/testify/suite"
-	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -15,28 +16,33 @@ type TestSuite struct {
 }
 
 func (t *TestSuite) TestConfig() {
+	fs := afero.NewMemMapFs()
 
-	setup := func(filename, yamlContent string) {
-		file, err := os.Create(filename)
+	setup := func(filePath, yamlContent string) {
+		err := fs.MkdirAll(filePath, 0777)
+		t.Require().NoError(err)
+		file, err := fs.Create(filepath.Join(filePath, "config.yaml"))
 		t.Require().NoError(err)
 		_, err = file.Write([]byte(yamlContent))
 		t.Require().NoError(err)
+		err = file.Close()
+		t.Require().NoError(err)
 	}
 
-	teardown := func(fileName string) {
-		err := os.Remove(fileName)
+	teardown := func(filePath string) {
+		err := fs.Remove(filepath.Join(filePath, "config.yaml"))
 		t.Require().NoError(err)
 	}
 
 	table := []struct {
 		name     string
-		fileName string
+		filePath string
 		input    string
 		want     *Config
 	}{
 		{
 			name:     "Get config in the current directory",
-			fileName: "./config.yaml",
+			filePath: "/etc/noteapp",
 			input: `store:
   file:
     path: /test `,
@@ -50,7 +56,7 @@ func (t *TestSuite) TestConfig() {
 		},
 		{
 			name:     "Get config with a file path store default",
-			fileName: "./config.yaml",
+			filePath: "/etc/noteapp",
 			input: `store:
   file:
     path:`,
@@ -66,9 +72,9 @@ func (t *TestSuite) TestConfig() {
 
 	for _, row := range table {
 		t.Run(row.name, func() {
-			setup(row.fileName, row.input)
-			defer teardown(row.fileName)
-			got, err := newConfig()
+			setup(row.filePath, row.input)
+			defer teardown(row.filePath)
+			got, err := newConfig(fs)
 			t.Require().NoError(err)
 			t.Equal(row.want, got)
 		})
