@@ -72,12 +72,12 @@ func (s *Server) printInfo() {
 
 	writeToConsole("==============ROUTES================\n")
 	for _, route := range s.HTTPRoutes {
-		writeToConsole("%s\t%s\n", route.Method(), route.Path())
+		writeToConsole("👉️ %s\t%s\n", route.Method(), route.Path())
 	}
 	writeToConsole("\n")
 	writeToConsole("============MIDDLEWARE==============\n")
 	for _, mw := range s.Middlewares {
-		writeToConsole("%s\n", mw.Name)
+		writeToConsole("👉 %s\n", mw.Name)
 	}
 	writeToConsole("\n")
 }

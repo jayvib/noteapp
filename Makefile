@@ -45,8 +45,7 @@ endif
 		-a \
 		-tags netgo \
 		-ldflags '-w -extldflags "-static"' \
-		-ldflags '-X "main.Version=${NOTEAPP_VERSION}"' \
-		-ldflags '-X "main.BuildCommit=${GIT_COMMIT}"' \
+		-ldflags '-X "main.Version=${NOTEAPP_VERSION}" -X "main.BuildCommit=${GIT_COMMIT}"' \
 		-o ./bin/noteapp.linux \
 		./cmd/noteapp_server/main.go
 
