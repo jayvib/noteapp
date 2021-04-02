@@ -33,7 +33,7 @@ spec:
             claimName: noteapp-pv-local-claim
       containers:
         - name: noteapp-pod
-          image: jayvib/noteapp:0.2.0
+          image: jayvib/noteapp:0.2.1
           ports:
             - containerPort: 50001
           volumeMounts:
