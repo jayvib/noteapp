@@ -40,11 +40,18 @@ func getRoutes(svc note.Service) []api.Route {
 		encodeResponse,
 	)
 
+	fetchHandler := httptransport.NewServer(
+		makeFetchEndpoint(svc),
+		decodeFetchRequest,
+		encodeResponse,
+	)
+
 	routes := []api.Route{
 		&nhttp.Route{HandlerValue: getHandler, MethodValue: http.MethodGet, PathValue: "/v1/note/{id}"},
 		&nhttp.Route{HandlerValue: createHandler, MethodValue: http.MethodPost, PathValue: "/v1/note"},
 		&nhttp.Route{HandlerValue: updateHandler, MethodValue: http.MethodPut, PathValue: "/v1/note"},
 		&nhttp.Route{HandlerValue: deleteHandler, MethodValue: http.MethodDelete, PathValue: "/v1/note/{id}"},
+		&nhttp.Route{HandlerValue: fetchHandler, MethodValue: http.MethodGet, PathValue: "/v1/notes"},
 	}
 	return routes
 }

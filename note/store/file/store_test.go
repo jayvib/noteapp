@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"google.golang.org/protobuf/proto"
 	"io"
 	"noteapp/note"
 	"noteapp/note/noteutil"
@@ -55,6 +56,54 @@ func (s *FileStoreTestSuite) SetupTest() {
 	store := newStore(file)
 	s.SetStore(store)
 	s.store = store
+}
+
+func (s *FileStoreTestSuite) TestLoadNotesFromTheFile() {
+	setup := func(size int) (note.Store, func()) {
+		fs := afero.NewMemMapFs()
+		file, err := fs.OpenFile("./test_note.pb", os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0666)
+		s.Require().NoError(err)
+
+		var notes []*note.Note
+		for i := 0; i < size; i++ {
+			notes = append(notes, noteFactory())
+		}
+
+		var protoMessage []proto.Message
+		for _, n := range notes {
+			protoMessage = append(protoMessage, protoutil.NoteToProto(n))
+		}
+
+		err = protoutil.WriteAllProtoMessages(file, protoMessage...)
+		s.Require().NoError(err)
+
+		err = file.Sync()
+		s.Require().NoError(err)
+		store := newStore(file)
+		return store, func() {
+			_ = file.Close()
+		}
+	}
+
+	s.Run("Successfully loaded notes from the file", func() {
+		size := 20
+		store, closerFn := setup(size)
+		defer closerFn()
+		iter, err := store.Fetch(dummyCtx, &note.Pagination{
+			Size:   uint64(size),
+			Page:   1,
+			SortBy: "title",
+			Ascend: false,
+		})
+		s.Require().NoError(err)
+
+		var got []*note.Note
+		for iter.Next() {
+			got = append(got, iter.Note())
+		}
+
+		s.Equal(size, len(got))
+	})
 }
 
 func (s *FileStoreTestSuite) TestInsert() {

@@ -1,8 +1,26 @@
 package note
 
-import "bytes"
+import (
+	"bytes"
+	"strings"
+)
 
 // ❎ TODO: Create testing for each sorter.
+
+// GetSortBy parses s and get the equivalent value of SortBy type.
+func GetSortBy(s string) SortBy {
+	lowerValue := strings.ToLower(s)
+	switch lowerValue {
+	case "id":
+		return SortByID
+	case "title":
+		return SortByTitle
+	case "created_date":
+		return SortByCreatedTime
+	default:
+		return SortByTitle
+	}
+}
 
 // SortByIDSorter implements sort.Interface which
 // sort the note by its ID.

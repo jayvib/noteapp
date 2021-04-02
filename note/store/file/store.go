@@ -48,6 +48,10 @@ type Store struct {
 // note data and the number of pages of the current fetch pagination.
 func (s *Store) Fetch(ctx context.Context, p *note.Pagination) (note.Iterator, error) {
 
+	if err := s.lazyInit(); err != nil {
+		return nil, err
+	}
+
 	var (
 		errChan  = make(chan error, 1)
 		iterChan = make(chan note.Iterator, 1)

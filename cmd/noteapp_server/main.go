@@ -6,10 +6,12 @@ import (
 	"noteapp/api/middleware"
 	"noteapp/api/server"
 	"noteapp/api/server/meta"
+	"noteapp/config"
 	"noteapp/note/api/v1/transport/rest"
 	noteservice "noteapp/note/service"
 	filestore "noteapp/note/store/file"
 	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -23,19 +25,20 @@ var (
 )
 
 const (
-	port       = 50001
 	dbFileName = "note.pb"
 )
 
 func main() {
 
-	file, err := os.OpenFile(dbFileName, os.O_CREATE|os.O_RDWR, 0666)
+	conf := config.New()
+
+	file, err := os.OpenFile(filepath.Join(conf.Store.File.Path, dbFileName), os.O_CREATE|os.O_RDWR, 0666)
 	mustNoError(err)
 	defer func() { _ = file.Close() }()
 
 	svc := noteservice.New(filestore.New(file))
 	srv := server.New(&server.Config{
-		Port: port,
+		Port: conf.Server.Port,
 		Middlewares: []api.NamedMiddleware{
 			middleware.NewLoggingMiddleware(),
 		},

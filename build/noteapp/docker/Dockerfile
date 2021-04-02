@@ -1,7 +1,7 @@
 # Copyright 2021 Jayson Vibandor. All right reserved.
 
 # STEP 1: Build the executable
-FROM golang:1.16.2-alpine3.13 as builder
+FROM golang:1.16.3-alpine3.13 as builder
 MAINTAINER "Jayson Vibandor" "jayson.vibandor@gmail.com"
 RUN apk update && \
 		apk upgrade && \
