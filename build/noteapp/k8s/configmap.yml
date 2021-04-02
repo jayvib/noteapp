@@ -7,6 +7,6 @@ data:
   config.yaml: |
     store:
       file:
-        path: /etc/noteapp
+        path: .
     server:
       port: 50001

@@ -24,7 +24,7 @@ spec:
             name: noteapp-config
       containers:
         - name: noteapp-pod
-          image: jayvib/noteapp:latest
+          image: jayvib/noteapp:0.2.0
           ports:
             - containerPort: 50001
           volumeMounts:
@@ -39,6 +39,21 @@ data:
   config.yaml: |
     store:
       file:
-        path: /etc/noteapp
+        path: .
     server:
       port: 50001
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: noteapp-svc
+  labels:
+    app: noteapp
+spec:
+  type: NodePort
+  ports:
+    - port: 50001
+      nodePort: 30001 # the port that will bind to host
+      protocol: TCP
+  selector:
+    app: noteapp
