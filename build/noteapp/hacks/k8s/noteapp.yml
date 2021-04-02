@@ -1,13 +1,8 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: dev
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: noteapp
-  namespace: dev
 spec:
   replicas: 1
   selector:
@@ -28,9 +23,9 @@ spec:
         - name: volconf
           configMap:
             name: noteapp-config
-        - name: noteapp-pv-local
+        - name: noteapp-data-pv
           persistentVolumeClaim:
-            claimName: noteapp-pv-local-claim
+            claimName: noteapp-vol-claim
       containers:
         - name: noteapp-pod
           image: jayvib/noteapp:0.2.0
@@ -40,18 +35,17 @@ spec:
             - mountPath: /etc/noteapp
               name: volconf
             - mountPath: /etc/noteapp/data
-              name: noteapp-pv-local
+              name: noteapp-data-pv
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: noteapp-config
-  namespace: dev
 data:
   config.yaml: |
     store:
       file:
-        path: .
+        path: /etc/noteapp/data
     server:
       port: 50001
 ---
@@ -61,12 +55,11 @@ metadata:
   name: noteapp-svc
   labels:
     app: noteapp
-  namespace: dev
 spec:
   type: NodePort
   ports:
     - port: 50001
-      nodePort: 30001 # the port that will bind to host
+      nodePort: 30002 # the port that will bind to host
       protocol: TCP
   selector:
     app: noteapp
