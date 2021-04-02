@@ -49,10 +49,9 @@ func newConfig(fs afero.Fs) (*Config, error) {
 		viper.Set("store.file.path", ".")
 	}
 
-	//if viper.Get("server.port") == nil {
-	//	viper.Set("server.port", 50001)
-	//}
-	//
+	if viper.Get("server.port") == nil {
+		viper.Set("server.port", 50001)
+	}
 
 	var conf Config
 	err = viper.Unmarshal(&conf)

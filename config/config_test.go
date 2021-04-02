@@ -43,10 +43,16 @@ func (t *TestSuite) TestConfig() {
 		{
 			name:     "Get config in the current directory",
 			filePath: "/etc/noteapp",
-			input: `store:
+			input: `
+store:
   file:
-    path: /test `,
+    path: /test
+server:
+  port: 8080`,
 			want: &Config{
+				Server: Server{
+					Port: 8080,
+				},
 				Store: Store{
 					File: File{
 						Path: "/test",
@@ -55,12 +61,13 @@ func (t *TestSuite) TestConfig() {
 			},
 		},
 		{
-			name:     "Get config with a file path store default",
+			name:     "Get config with defaults",
 			filePath: "/etc/noteapp",
-			input: `store:
-  file:
-    path:`,
+			input:    ``,
 			want: &Config{
+				Server: Server{
+					Port: 50001,
+				},
 				Store: Store{
 					File: File{
 						Path: ".",
