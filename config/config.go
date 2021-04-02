@@ -6,6 +6,11 @@ import (
 
 // New initializes the configuration setting. It searches for the
 // config file with a filename of "config.yaml".
+//
+// Config file will be search in the following path in order:
+// - "/etc/noteapp"
+// - "$HOME/.noteapp"
+// - "."
 func New() *Config {
 	conf, err := newConfig()
 	if err != nil {
