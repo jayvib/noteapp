@@ -3,6 +3,33 @@ kind: Namespace
 metadata:
   name: dev
 ---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: noteapp-pv-local
+  namespace: dev
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteMany
+  hostPath:
+    path: "/etc/noteapp"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: noteapp-pv-local-claim
+  namespace: dev
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -51,7 +78,7 @@ data:
   config.yaml: |
     store:
       file:
-        path: .
+        path: /etc/noteapp/data
     server:
       port: 50001
 ---
