@@ -1,0 +1,33 @@
+version: "3.5"
+
+# ⚠⚠⚠ This compose file is use for development purpose only.
+
+services:
+  noteapp-engine:
+    image: noteapp:dev
+    build:
+      context: ../../../
+      dockerfile: build/noteapp/docker/Dockerfile
+      args:
+        appname: notepp
+      labels:
+        com.noteapp.description: "The applications backend engine"
+
+    ports:
+      - "50001:50001"
+    networks:
+      - noteapp-backend
+    volumes:
+      - type: bind
+        source: ./config.yaml
+        target: /etc/noteapp/config.yaml
+      - type: volume
+        source: noteapp-volume
+        target: /etc/noteapp/data
+
+networks:
+  noteapp-backend:
+
+volumes:
+  noteapp-volume:
+

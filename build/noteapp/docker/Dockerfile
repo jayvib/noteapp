@@ -1,5 +1,7 @@
 # Copyright 2021 Jayson Vibandor. All right reserved.
 
+ARG appname
+
 # STEP 1: Build the executable
 FROM golang:1.16.3-alpine3.13 as builder
 MAINTAINER "Jayson Vibandor" "jayson.vibandor@gmail.com"
@@ -13,6 +15,7 @@ RUN make build-noteapp
 
 # STEP 2: Distribute the executable
 FROM alpine:3.7
+ENV APPNAME $appname
 RUN apk update && \
 		apk upgrade && \
 		apk --update --no-cache add tzdata && \
