@@ -16,7 +16,7 @@ var (
 //
 // Config file will be search in the following path in order:
 // - "/etc/noteapp"
-// - "$HOME/.noteapp"
+// - "/run/secrets"
 // - "."
 func New() *Config {
 	// Do singleton
@@ -37,7 +37,10 @@ func newConfig(fs afero.Fs) (*Config, error) {
 	viper.SetConfigType("yaml")
 
 	viper.AddConfigPath("/etc/noteapp")
-	viper.AddConfigPath("$HOME/.noteapp")
+	// For Docker Compose default path for mounting the secret.
+	// see. https://docs.docker.com/compose/compose-file/compose-file-v3/#secrets
+	viper.AddConfigPath("/run/secrets")
+	viper.AddConfigPath("/")
 	viper.AddConfigPath(".")
 
 	err := viper.ReadInConfig()

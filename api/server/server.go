@@ -10,6 +10,8 @@ import (
 	"text/tabwriter"
 )
 
+// TODO: Add a helth check endoint
+
 // New takes config for all the arguments that the server needs and
 // return a server instance.
 func New(conf *Config) *Server {
