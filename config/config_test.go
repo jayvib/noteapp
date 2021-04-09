@@ -16,9 +16,9 @@ type TestSuite struct {
 }
 
 func (t *TestSuite) TestConfig() {
-	fs := afero.NewMemMapFs()
 
-	setup := func(filePath, yamlContent string) {
+	setup := func(filePath, yamlContent string) (fs afero.Fs, teardown func()) {
+		fs = afero.NewMemMapFs()
 		err := fs.MkdirAll(filePath, 0777)
 		t.Require().NoError(err)
 		file, err := fs.Create(filepath.Join(filePath, "config.yaml"))
@@ -27,11 +27,10 @@ func (t *TestSuite) TestConfig() {
 		t.Require().NoError(err)
 		err = file.Close()
 		t.Require().NoError(err)
-	}
-
-	teardown := func(filePath string) {
-		err := fs.Remove(filepath.Join(filePath, "config.yaml"))
-		t.Require().NoError(err)
+		return fs, func() {
+			err := fs.Remove(filepath.Join(filePath, "config.yaml"))
+			t.Require().NoError(err)
+		}
 	}
 
 	table := []struct {
@@ -75,12 +74,32 @@ server:
 				},
 			},
 		},
+		//		{
+		//			name:     "Get config from the root",
+		//			filePath: "/",
+		//			input: `
+		//store:
+		//  file:
+		//    path: /test
+		//server:
+		//  port: 8080`,
+		//			want: &Config{
+		//				Server: Server{
+		//					Port: 8080,
+		//				},
+		//				Store: Store{
+		//					File: File{
+		//						Path: "/test",
+		//					},
+		//				},
+		//			},
+		//		},
 	}
 
 	for _, row := range table {
 		t.Run(row.name, func() {
-			setup(row.filePath, row.input)
-			defer teardown(row.filePath)
+			fs, teardown := setup(row.filePath, row.input)
+			defer teardown()
 			got, err := newConfig(fs)
 			t.Require().NoError(err)
 			t.Equal(row.want, got)
