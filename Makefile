@@ -1,5 +1,7 @@
 #!make
 
+DOCKER_IMAGE_BUILD_FLAG="no-force"
+
 # Include the envfile that contains all the metadata about the app
 include build/noteapp/envfile
 export $(shell sed 's/=.*//' build/noteapp/envfile)
@@ -15,6 +17,44 @@ define LOCAL_SERVER_HELP_INFO
 endef
 local-server: build-noteapp
 	./bin/${APP_NAME}.linux
+
+define START_DEV_SERVICES_HELP_INFO
+# Use to spin the development services
+# including the noteapp dependencies.
+# by default when the image is not yet exists
+# this will build the Docker image of the engine.
+# When you want to force build the image despite of
+# the image is already existing use:
+#      DOCKER_IMAGE_BUILD_FLAG=force
+#
+# Example:
+# 	make start-dev-services
+#   make start-dev-services DOCKER_IMAGE_BUILD_FLAG=force
+endef
+.PHONY: start-dev-services
+start-dev-services:
+ifeq ($(DOCKER_IMAGE_BUILD_FLAG), force)
+	@echo "👉 Forcing the Docker to build the image"
+	cd ./build/noteapp/docker/dev && docker-compose build
+endif
+	@echo "👉 Starting the services"
+	@cd ./build/noteapp/docker/dev && \
+	 	docker-compose up -d && \
+	 	docker-compose ps
+
+define STOP_DEV_SERVICES
+# Use to stop the development services
+#
+# Example:
+# 	make stop-dev-services
+endef
+.PHONY: stop-dev-services
+stop-dev-services:
+	@echo "👉 Stopping the services"
+	@cd ./build/noteapp/docker/dev && \
+		docker-compose stop && \
+		docker-compose ps
+
 
 define BUILD_HELP_INFO
 # Build run the build step process of Noteapp Docker image.
